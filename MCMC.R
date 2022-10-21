@@ -1,6 +1,7 @@
 #'@param q: probability to perform a split
 #'@param y: data, time X features
-#'@param 
+#'@param trunc: truncation value transition densities
+#'@param step_omega: number of MH steps or number of samples in MC integration
 #'
 
 
@@ -65,7 +66,7 @@ MCMC <- function(n_iter, burnin, y, q,
       j <- output_split[[2]]
       
       # compute MH alpha
-      alpha <- MC_alpha(trunc, step_omega, y, omega, j, rho_proposed, rho)
+      alpha <- MC_alpha(method, trunc, step_omega, y, omega, j, rho_proposed, rho)
       
       
       

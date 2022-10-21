@@ -66,7 +66,7 @@ split_multicluster <- function(rho){
   
   # check code
   if(length(rho_proposed) != k+1){
-  
+    
     warning('Problem partition proposed')
     browser()
     
