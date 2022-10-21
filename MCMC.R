@@ -1,4 +1,5 @@
 #'@param q: probability to perform a split
+#'@param y: data, time X features
 #'@param 
 #'
 
@@ -7,6 +8,9 @@
 
 
 MCMC <- function(n_iter, burnin, y, q,
+                 #method = 'MC_integration',
+                 trunc,
+                 step_omega,
                  alpha_omega, beta_omega, 
                  alpha_sigma, beta_sigma, 
                  alpha_theta, beta_theta){
@@ -60,8 +64,12 @@ MCMC <- function(n_iter, burnin, y, q,
       rho_proposed <- output_split[[1]]
       j <- output_split[[2]]
       
-      # update omega
-      proposed_omega <- MC_omega(y, omega, j)
+      # compute MH alpha
+      alpha <- MC_alpha(trunc, step_omega, y, omega, j, rho_proposed, rho)
+      
+      
+      
+      
       # MH step
        
       
