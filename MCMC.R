@@ -5,6 +5,7 @@
 #'
 
 
+library('extraDistr')
 
 
 
@@ -39,13 +40,19 @@ MCMC <- function(n_iter, burnin, y, q,
   rho <- c(as.integer(n/2))
   rho <- c(rho, n-rho)
   
-  
   # number of clusters
   k <- length(rho)
   
   # initial omega
   omega <- array(0, c(k, d)) # cluster X component
   ### TODO: initialize omega
+  
+  # initial cluster likelihood
+  likelihood <- array(0, k)
+  ### TODO: initialize cluster likelihood
+  
+  
+  
 
   for(iter in (-burnin+1):niter){
     
@@ -66,7 +73,8 @@ MCMC <- function(n_iter, burnin, y, q,
       j <- output_split[[2]]
       
       # compute MH alpha
-      alpha <- MC_alpha(method, trunc, step_omega, y, omega, j, rho_proposed, rho)
+      
+      # <- MC_alpha(method, trunc, step_omega, y, omega, j, rho_proposed, rho)
       
       
       
