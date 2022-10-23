@@ -81,7 +81,7 @@ pochhammer <- function(x, factor){
   
   value <- 1
   
-  if(n == 0)
+  if(factor == 0)
     return(value)
   
   
@@ -95,19 +95,21 @@ pochhammer <- function(x, factor){
 
 # Zeta_m
 
-zeta_m <- function(y_0, y, m){
+zeta_m <- function(y_0, y, omega, m){
   
   if(m == 0)
     return(1)
   
-  d <- dim(y)[2]
+  d <- length(y)
   
   composition <- get_all_weak_composition(m, d)
   
   if(choose(m+d-1, m) == 1) # it should not happen, if so next line does not work -> at least d compositions
     browser()
+    
+  
 
-  num_composition <- dim(composition)[2]
+  num_composition <- dim(composition)[1]
   
   value <- 0
   
@@ -115,7 +117,7 @@ zeta_m <- function(y_0, y, m){
     
     curr_composition <- composition[i,]
     
-    value <- value + factorial(m) * (sum(y_0))^curr_composition[d] * ddirichlet(y, omega + curr_composition)
+    value <- value + factorial(m) * (sum(y_0))^curr_composition[d] * ddirichlet(y, omega + curr_composition) / prod(factorial(curr_composition))
     
   }
   
@@ -127,28 +129,30 @@ zeta_m <- function(y_0, y, m){
 
 
 # Q_n
-Q_n_poly <- function(y_0, y, omega, degree){
+Q_n_poly <- function(y_0, y, omega, n){
   
   
-  if(degree == 0) # Q_0 = 1
+  if(n == 0) # Q_0 = 1
     return(1)
   
   
+  omega_norm <- sum(omega)
   value <- 0
   
-  omega_norm <- sum(omega)
   
-  for(m in 1:degree){
+  for(m in 0:n){
     
-    p <- pochhammer(omega_norm + m, degree - 1)
-    z_m <- zeta_m(y_0, y, m)
+    p <- pochhammer(omega_norm + m, n - 1)
+    z_m <- zeta_m(y_0, y, omega, m)
+    
   
-    value <- value + (-1)^(degree - m) * choose(degree, m) * p * zeta_m
+    value <- value + ((-1)^(n - m)) * choose(n, m) * p * z_m
+    
     
   }
   
   
-  return((omega_norm + 2 * degree - 1) * value / factorial(degree))
+  return((omega_norm + 2 * n - 1) * value / factorial(n))
     
 }
 
@@ -157,21 +161,21 @@ Q_n_poly <- function(y_0, y, omega, degree){
 #### TRANSITION DENSITIES FUNCTION ####
 transition_densities <- function(y_0, y, omega, trunc){
   
-  value_1 <- ddirichlet(y, omega, log = T)
+  value_1 <- ddirichlet(y, omega)
   log_Qn <- array(0, trunc + 1)
   lambda_n <- array(0, trunc + 1)
   
   omega_norm <- sum(omega)
   
   for(n in 1:trunc){
-    log_Qn[n + 1] <- log(Q_n_poly(y_0, y, omega, trunc))
-    lambda_n[n + 1] <- (- .5) * n * (n - 1 + omega_norm)
+    log_Qn[n + 1] <- log(Q_n_poly(y_0, y, omega, n))
+    lambda_n[n + 1] <- (.5) * n * (n - 1 + omega_norm)
   }
     
   
     
-  
-  return(sum(exp(lambda_n + log_Qn)) + value_1)
+  # browser()
+  return(sum(exp(-lambda_n + log_Qn)) + value_1)
     
   
 }
