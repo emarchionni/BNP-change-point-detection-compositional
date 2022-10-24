@@ -56,7 +56,7 @@ split_multicluster <- function(rho){
     
   } else if(j == k) {
     
-    rho_proposed <- c(rho[1:k-1], l, rho[k] - l)
+    rho_proposed <- c(rho[1:(k-1)], l, rho[k] - l)
     
   } else {
     

@@ -6,13 +6,14 @@
 
 
 library('extraDistr')
+library('MASS')
 
 
 
 MCMC <- function(n_iter, burnin, y, q,
                  #method = 'MC_integration',
                  trunc,
-                 step_omega,
+                 iter_omega, burnin_omega,
                  alpha_omega, beta_omega, 
                  alpha_sigma, beta_sigma, 
                  alpha_theta, beta_theta){
@@ -44,7 +45,7 @@ MCMC <- function(n_iter, burnin, y, q,
   k <- length(rho)
   
   # initial omega
-  omega <- array(0, c(k, d)) # cluster X component
+  omega <- array(0, c(k, d)) # cluster x component
   ### TODO: initialize omega
   
   # initial cluster likelihood
@@ -67,15 +68,17 @@ MCMC <- function(n_iter, burnin, y, q,
       # extreme values are not surely generated (not a.s., but surely by implementation)
       # check help of runif() for details
       
+      
+      # propose split
       output_split <- split(rho)
       
       rho_proposed <- output_split[[1]]
       j <- output_split[[2]]
       
+      # update omega for new clusters
+      
+      
       # compute MH alpha
-      
-      # <- MC_alpha(method, trunc, step_omega, y, omega, j, rho_proposed, rho)
-      
       
       
       

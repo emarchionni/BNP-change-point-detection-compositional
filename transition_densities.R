@@ -168,8 +168,10 @@ transition_densities <- function(y_0, y, omega, trunc){
   omega_norm <- sum(omega)
   
   for(n in 1:trunc){
+    
     log_Qn[n + 1] <- log(Q_n_poly(y_0, y, omega, n))
     lambda_n[n + 1] <- (.5) * n * (n - 1 + omega_norm)
+    
   }
     
   
