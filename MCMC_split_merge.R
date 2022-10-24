@@ -1,21 +1,5 @@
 #### SPLIT ####
 
-split <- function(rho){
-  
-  k <- length(rho)
-  
-  
-  if(length(rho) == 1){ ### all observation were in a single cluster
-    
-    return(split_singlecluster(rho))
-    
-  } else { ### observations were split at least in two clusters
-    
-    return(split_multicluster(rho))
-  }
-  
-} 
-  
 
 split_singlecluster <- function(rho){
   
@@ -27,7 +11,7 @@ split_singlecluster <- function(rho){
   return(list(rho_proposed,1))
   
 }
-  
+
 
 split_multicluster <- function(rho){
   
@@ -35,6 +19,7 @@ split_multicluster <- function(rho){
   
   # select a cluster s.t. n_j > 1 
   idx_no_single <- which(rho > 1)
+  
   if(length(idx_no_single) != 1){
     
     j <- sample(idx_no_single, size = 1)
@@ -77,9 +62,82 @@ split_multicluster <- function(rho){
   
   
 }  
+
+
+
+
+split <- function(rho){
+  
+  k <- length(rho)
   
   
+  if(length(rho) == 1){ ### all observation are in a single cluster
+    
+    return(split_singlecluster(rho))
+    
+  } else { ### observations are split at least in two clusters
+    
+    return(split_multicluster(rho))
+  }
+  
+} 
+  
+
   
   
+#### MERGE ####
+
+merge_twocluster <- function(rho){
+  
+  j <- 1
+  
+  return(list(sum(rho), j))
+  
+}
+
+
+merge_multicluster <- function(rho){
+  
+  
+  k <- length(rho)
+  
+  j <- sample(1:(k-1), size = 1)
+  
+  
+  if(j == 1){
+    
+    rho_proposed <- c(rho[1] + rho[2], rho[3:k])
+    
+  } else if (j == (k-1)) {
+    
+    rho_proposed <- c(rho[1:(j-1)], rho[j] + rho[j+1])
+    
+  } else {
+    
+    rho_proposed <- c(rho[1:(j-1)], rho[j] + rho[j+1], rho[(j+2):k])
+    
+  }
+  
+  return(list(rho_proposed, j))
+  
+}
+
+
+merge <- function(rho){
+  
+  k <- length(rho)
+  
+  if(k == 2){ ### observations are split in TWO clusters
+    
+    return(merge_twocluster(rho))
+    
+  } else { ### observations are split at least in more than two clusters
+    
+    return(merge_multicluster(rho))
+    
+    }
+ 
+  
+}
   
 

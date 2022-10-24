@@ -42,8 +42,8 @@ MH_omega <- function(burnin_omega, iter_omega, y,
     
     if(log(runif(1)) <= min(0, ratio)){
       old_omega <- proposed_omega
-      print('accepted')
-    } else print('refused')
+      #print('accepted')
+    } #else print('refused')
       
     
     if(i > 0)
@@ -62,18 +62,16 @@ MH_omega <- function(burnin_omega, iter_omega, y,
 #### MH OMEGA SPLIT ####
 
 MH_omega_split <- function(burnin_omega, iter_omega, 
-                           y, j, rho, rho_proposed,
+                           y, j, d, rho_proposed,
                            omega, sigma_0, 
                            alpha_omega, beta_omega, trunc){
   
   #'@param omega: nonupdated omega / dim: old_clusters x components
+  #'@param rho: old partition, just to set d (to know dim of omega)
+  #'@param j: j and j+1 are the new split clusters
   
   y_partition <- split_data_partition(y, rho_proposed)
-  
-  if(length(rho) == 1)
-    d <- length(omega)
-  else
-    d <- dim(omega)[2]
+
   
   new_value <- array(0, c(2,d))
   
@@ -127,4 +125,27 @@ MH_omega_split <- function(burnin_omega, iter_omega,
 }
 
 
+#### MH OMEGA MERGE ####
 
+MH_omega_merge <- function(burnin_omega, iter_omega, 
+                           y, j, rho_proposed,
+                           omega, sigma_0, 
+                           alpha_omega, beta_omega, trunc){
+  
+  #'@param omega: nonupdated omega / dim: old_clusters x components
+  #'@param j: merged cluster
+  
+  d <- dim(omega)[2] #there were least two clusters
+  
+  
+  y_partition <- split_data_partition(y, rho_proposed)
+  
+  initial_omega <- colMeans(omega[j:(j+1), ])
+  
+  n_clust <- rho_proposed[j]
+  y_clust <- y_partition[[j]]
+  
+  
+  
+  
+}
