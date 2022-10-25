@@ -136,7 +136,7 @@ MH_omega_merge <- function(burnin_omega, iter_omega,
   #'@param omega: nonupdated omega / dim: old_clusters x components
   #'@param j: merged cluster
   
-  d <- dim(omega)[2] #there were at least two clusters
+  #d <- dim(omega)[2] #there were at least two clusters
   
   
   y_partition <- split_data_partition(y, rho_proposed)

@@ -15,9 +15,9 @@ MC_log_alpha_split <- function(q, j,
     
     log_ratio <- log(1 - q) + log(n - 1) + sum(likelihood_porposed) + eppf_proposed
     
-    log_ratio <- log_ratio - sum(likelihood_old) + eppf_old
+    log_ratio <- log_ratio - sum(likelihood_old) - eppf_old
     
-    return(ratio)
+    return(log_ratio)
     
   }
   
@@ -35,3 +35,35 @@ MC_log_alpha_split <- function(q, j,
 }
 
 
+
+#### ALPHA MERGE ####
+
+MC_log_alpha_merge <- function(q, j,
+                               likelihood_old, eppf_old,
+                               likelihood_proposed, eppf_proposed,
+                               rho, rho_proposed){
+  
+  
+  k_proposed <- length(rho_proposed)
+  k_old <- length(rho)
+  
+  n <- sum(rho)
+  
+  if(k_old == n){
+    
+    log_ratio <- log(q) + log(n - 1) + sum(likelihood_proposed) + eppf_proposed
+    
+    log_ratio <- log_ratio - sum(likelihood_old) - eppf_old
+    
+  }
+  
+  ng <- length(which(rho_proposed > 1))
+  n_new <- rho_proposed[j]
+  
+  log_ratio <- sum(likelihood_proposed) + eppf_proposed + log(k_old - 1) + log(q)
+  
+  log_ratio <- log_ratio - sum(likelihood_old) - eppf_old - log(ng) - log(n_new - 1) - log(1 - q)
+  
+  return(log_ratio)
+  
+}

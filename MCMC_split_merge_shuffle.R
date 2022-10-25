@@ -141,3 +141,76 @@ merge <- function(rho){
 }
   
 
+
+#### SHUFFLE ####
+
+shuffle_twocluster <- function(rho){
+  
+  j <- 1
+  
+  n_shuffle <- rho[1] + rho[2]
+  
+  # case n_shuffle = 2 -> two observation in total (not really useful in real applications otherwise)
+  if(n_shuffle == 2) 
+    return(list(rho,j))
+    
+  
+  # from here we are sure k = 2 and n_shuffle > 2 -> hence shuffle makes sense
+  l <- sample(1:(n_shuffle - 1), size = 1)
+  
+  rho_proposed <- c(l, n_shuffle - l)
+  
+  return(list(rho_proposed, 1))
+  
+  
+}
+
+shuffle_multicluster <- function(rho){
+  
+  k <- length(rho)
+  
+  j <- sample(1:(k-1), size = 1)
+  
+  n_shuffle <- rho[j] + rho[j+1]
+  
+  # case n_shuffle = 2 -> shuffle does not make sense for the selected clusters
+  if(n_shuffle == 2)
+    return(list(rho,j))
+  
+  # from here we are sure k > 2 and n_shuffle > 2 -> hence shuffle makes sense
+  l <- sample(1:(n_shuffle - 1), size = 1)
+  
+  if(j == 1){
+    
+    rho_proposed <- c(l, n_shuffle - l, rho[(j+2):k])
+    
+  } else if(j == (k-1)){
+    
+    rho_proposed <- c(rho[1:(j-1)], l, n_shuffle - l)
+    
+  } else {
+    
+    rho_proposed <- c(rho[1:(j-1)], l, n_shuffle - l, rho[(j+2):k])
+  }
+  
+  return(list(rho_proposed, j))
+  
+}
+
+
+
+shuffle <- function(rho){
+  
+  k <- length(rho)
+  
+  if(k == 2){ ### observations are split in TWO clusters
+    
+    return(shuffle_twocluster(rho))
+    
+  } else { ### observations are split at least in more than two clusters
+    
+    return(shuffle_multicluster(rho))
+    
+  }
+  
+}

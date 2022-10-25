@@ -45,7 +45,9 @@ log_integrated_likelihood_cluster <- function(y, omega, n_clust, trunc){
 
 
 #### LOG INTEGRATED LIKELIHOOD SPLIT ####
-full_log_integrated_likelihood_after_split <- function(old_likelihood, y, rho_proposed, j, trunc, omega){
+full_log_integrated_likelihood_after_split <- function(old_likelihood, y, 
+                                                       rho_proposed, j, 
+                                                       trunc, omega){
   
   #'@param omega: updated omega / dim: new_clusters x components
   #'@param old_likelihood: nonupdated likelihood / dim: old_likelihood
@@ -96,6 +98,49 @@ full_log_integrated_likelihood_after_split <- function(old_likelihood, y, rho_pr
   
   
   return(new_likelihood)
+  
+  
+}
+
+
+#### LOG INTEGRATED LIKELIHOOD MERGE ####
+full_log_integrated_likelihood_after_merge <- function(old_likelihood, y, 
+                                                       rho_proposed, j, 
+                                                       trunc, omega){
+  
+  #'@param omega: updated omega / dim: new_clusters x components
+  #'@param old_likelihood: nonupdated likelihood / dim: old_likelihood
+
+  y_partition <- split_data_partition(y, rho_proposed)
+  
+  n_clust <- rho_proposed[j]
+  y_clust <- y_partition[[j]]
+  omega_clust <- omega[j, ]
+  
+  new_value <- log_integrated_likelihood_cluster(y_clust, omega_clust, n_clust, trunc)
+  
+  
+  k <- length(rho_proposed) + 1 # old number of clusters
+  
+  if(k == 2){
+    
+    return(new_value)
+    
+  }
+  
+  if(j == 1){
+    
+    new_likelihood <- c(new_value, old_likelihood[3:k])
+    
+  } else if(j == (k-1)){
+    
+    new_likelihood <- c(old_likelihood[1:(j-1)], new_value)
+    
+  } else {
+    
+    new_likelihood <- c(old_likelihood[1:(j-1)], new_value, old_likelihood[(j+2):k])
+    
+  }
   
   
 }

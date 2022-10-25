@@ -99,7 +99,6 @@ MCMC <- function(n_iter, burnin, y, q,
                                                                         omega_proposed)
       
       # compute log MH-alpha
-      
       log_ratio <- MC_log_alpha_split(q, n, j,
                                       likelihood, eppf, 
                                       likelihood_porposed, eppf_proposed,
@@ -107,7 +106,7 @@ MCMC <- function(n_iter, burnin, y, q,
       
       # MH step
       
-      tot_split <- tot_split + 1 
+      tot_partition_split <- tot_partition_split + 1 
       
       if(log(runif(1)) <= min(0, log_ratio)){
         
@@ -148,17 +147,66 @@ MCMC <- function(n_iter, burnin, y, q,
                                        omega, sigma_0, 
                                        alpha_omega, beta_omega, trunc)
       
-      # update omega
+      
+      # compute likelihood proposed
+      likelihood_proposed <- full_log_integrated_likelihood_after_merge(likelihood, y, 
+                                                                        rho_proposed, j, 
+                                                                        trunc, omega_proposed)
+      
+      
+      
+      # compute log MH-alpha
+      
+      
+      log_ratio <- MC_log_alpha_merge(q, j,
+                                      likelihood, eppf,
+                                      likelihood_proposed, eppf_proposed,
+                                      rho, rho_proposed)
       
       
       # MH step
+      
+      tot_partition_merge <- tot_partition_merge + 1
+      
+      if(log(runif(1)) <= min(0, log_ratio)){
+        
+        rho <- rho_proposed
+        omega <- omega_proposed
+        likelihood <- likelihood_proposed
+        eppf <- eppf_proposed
+        acc_partition_merge <- acc_partition_merge + 1
+        
+      }
+      
+      if(iter > 0){
+        
+        ### TODO: save partition
+        
+        
+      }
+      
+      
+    }
+    
+    #### SHUFFLE ####
+    
+    
+    if(length(rho) > 1){
+      
+      
+      
+      
+      
+      
+      
       
       
       
       
     }
     
-    #### SHUFFLE ####
+    
+    
     
     #### UPDATE PARAMETERS ####
       
