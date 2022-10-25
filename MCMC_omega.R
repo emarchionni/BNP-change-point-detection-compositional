@@ -2,10 +2,11 @@
 
 
 
-MH_omega <- function(burnin_omega, iter_omega, y, 
-                         initial_omega, sigma_0, 
-                         alpha_omega, beta_omega, 
-                         n_clust, trunc){
+MH_omega <- function(burnin_omega, iter_omega, 
+                     y, 
+                     initial_omega, sigma_0, 
+                     alpha_omega, beta_omega, 
+                     n_clust, trunc){
   
   #'@param y: observation in the cluster / dim: time x components
   #'@param omega_initial: old_omega of cluster, where to centre gaussian / dim: d
@@ -135,17 +136,48 @@ MH_omega_merge <- function(burnin_omega, iter_omega,
   #'@param omega: nonupdated omega / dim: old_clusters x components
   #'@param j: merged cluster
   
-  d <- dim(omega)[2] #there were least two clusters
+  d <- dim(omega)[2] #there were at least two clusters
   
   
   y_partition <- split_data_partition(y, rho_proposed)
   
-  initial_omega <- colMeans(omega[j:(j+1), ])
+  initial_omega <- colMeans(omega[j:(j+1), ]) # initialize omega on the mean of the omega of the two merged clusters
   
   n_clust <- rho_proposed[j]
   y_clust <- y_partition[[j]]
   
   
+ new_value <-  MH_omega(burnin_omega, iter_omega, y_clust, 
+                        initial_omega, sigma_0, 
+                        alpha_omega, beta_omega, 
+                        n_clust, trunc)
+ 
+ 
+ k <- length(rho_proposed) + 1 # old number of clusters
+ 
+ if(k == 2){
+   
+   return(new_value)
+   
+ }
+ 
+ 
+ if(j == 1){
+   
+   new_omega <- rbind(new_omega, omega[3:k, ])
+   
+ } else if (j == (k-1)){
+   
+   new_omega <- rbind(omega[1:(k-2), ], new_omega)
+   
+ } else {
+   
+   new_omega <- rbind(omega[1:(j-1), ], new_omega, omega[(j+2):k, ])
+   
+ }
+   
+  
+  return(new_omega)
   
   
 }
