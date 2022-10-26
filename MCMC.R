@@ -7,7 +7,7 @@
 
 library('extraDistr')
 library('MASS')
-
+library('copula')
 
 
 MCMC <- function(n_iter, burnin, y, q,
@@ -15,8 +15,10 @@ MCMC <- function(n_iter, burnin, y, q,
                  trunc,
                  iter_omega, burnin_omega,
                  alpha_omega, beta_omega, 
-                 alpha_sigma, beta_sigma, 
-                 alpha_theta, beta_theta){
+                 alpha_sigma, beta_sigma,
+                 alpha_propose_sigma, beta_propose_sigma,
+                 alpha_theta, beta_theta,
+                 alpha_propose_theta, beta_propose_theta){
   
 
   #### INITIALIZATION ####
@@ -274,7 +276,40 @@ MCMC <- function(n_iter, burnin, y, q,
     #### UPDATE PARAMETERS ####
       
     
+    ### sigma
     
+    # propose sigma
+    proposed_sigma <- rbeta(1, alpha_propose_sigma, beta_propose_sigma)
+    
+    # compute log MH-alpha
+    log_ratio <- MC_log_alpha_sigma(sigma_old, sigma_proposed,
+                                    alpha_sigma, beta_sigma,
+                                    theta, alpha_theta, beta_theta,
+                                    rho)
+    
+    if(log(runif(1)) <= min(0, log_ratio)){
+      
+      sigma <- sigma_proposed
+      acc_sigma <- acc_sigma + 1
+      
+    }
+    
+    if(iter > 0){
+      #TODO: save
+    }
+      
+      
+    
+    ### theta
+    
+    # sample theta
+    theta <- sample_theta(n, k,
+                          theta, sigma, 
+                          alpha_theta, beta_theta)
+    
+    if(iter > 0){
+      #TODO: save
+    }
    
     
     
