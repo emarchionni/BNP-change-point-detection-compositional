@@ -144,3 +144,39 @@ full_log_integrated_likelihood_after_merge <- function(old_likelihood, y,
   
   
 }
+
+
+#### LOG INTEGRATED LIKELIHOOD SHUFFLE ####
+full_log_integrated_likelihood_after_shuffle <- function(old_likelihood, y, 
+                                                         rho_proposed, j, 
+                                                         trunc, omega){
+  
+  
+  #'@param omega: updated omega / dim: clusters x components
+  #'@param old_likelihood: nonupdated likelihood / dim: likelihood
+  
+  
+  n_shuffle <- rho_proposed[j] + rho_proposed[j + 1]
+  
+  if(n_shuffle == 2) # i.e. no actual shuffle occurred
+    return(old_likelihood)
+  
+  
+  
+  y_partition <- split_data_partition(y, rho_proposed)
+  
+  
+  for(clust in 0:1){
+    
+    n_clust <- rho_proposed[j + clust]
+    y_clust <- y_partition[[j + clust]]
+    omega_clust <- omega[j + clust, ]
+    
+    
+    old_likelihood[j + clust] <- log_integrated_likelihood_cluster(y_clust, omega_clust, n_clust, trunc)
+    
+  }
+  
+  return(old_likelihood)
+  
+}

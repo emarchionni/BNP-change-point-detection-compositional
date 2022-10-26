@@ -1,4 +1,4 @@
-#### MH SINGLE OMEGA ####
+#### MH SINGLE CLUSTER OMEGA ####
 
 
 
@@ -68,7 +68,6 @@ MH_omega_split <- function(burnin_omega, iter_omega,
                            alpha_omega, beta_omega, trunc){
   
   #'@param omega: nonupdated omega / dim: old_clusters x components
-  #'@param rho: old partition, just to set d (to know dim of omega)
   #'@param j: j and j+1 are the new split clusters
   
   y_partition <- split_data_partition(y, rho_proposed)
@@ -178,6 +177,50 @@ MH_omega_merge <- function(burnin_omega, iter_omega,
    
   
   return(new_omega)
+  
+  
+}
+
+
+#### MH OMEGA SHUFFLE ####
+
+MH_omega_shuffle <- function(burnin_omega, iter_omega, 
+                           y, j, d, rho_proposed,
+                           omega, sigma_0, 
+                           alpha_omega, beta_omega, trunc){
+  
+  #'@param omega: nonupdated omega / dim: old_clusters x components
+  #'@param j: j and j+1 are the shuffled clusters
+  
+  n_shuffle <- rho_proposed[j] + rho_proposed[j+1]
+  
+  if(n_shuffle == 2) # i.e. no actual shuffle occurred
+    return(omega)
+  
+  y_partition <- split_data_partition(y, rho_proposed)
+  
+  
+  new_value <- array(0, c(2,d))
+  
+  
+  for(clust in 0:1){
+    
+    y_clust <- y_partition[[j + clust]]
+    n_clust <- rho_proposed[j + clust]
+ 
+    
+    omega[j + clust, ] <- MH_omega(burnin_omega, iter_omega, y_clust, 
+                                   omega[j + clust, ], sigma_0, 
+                                   alpha_omega, beta_omega, 
+                                   n_clust, trunc)
+    
+  }
+  
+  
+  
+  return(omega)
+  
+  
   
   
 }

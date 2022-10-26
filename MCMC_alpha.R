@@ -67,3 +67,41 @@ MC_log_alpha_merge <- function(q, j,
   return(log_ratio)
   
 }
+
+
+
+#### ALPHA SHUFFLE ####
+MC_log_alpha_shuffle <- function(q, j,
+                               likelihood_old, eppf_old, 
+                               likelihood_porposed, eppf_proposed,
+                               rho, rho_proposed){
+  
+  
+  k_proposed <- length(rho_proposed)
+  k_old <- length(rho)
+  
+  n_shuffle <- rho_proposed[j] + rho_proposed[j + 1]
+  
+  if(n_shuffle == 2)  # i.e. no actual shuffle occurred
+    return(0)
+  
+  
+  log_ratio <- sum(likelihood_porposed) + eppf_proposed - sum(likelihood_old) - eppf_old
+  
+  return(log_ratio)
+  
+}
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  

@@ -194,10 +194,73 @@ MCMC <- function(n_iter, burnin, y, q,
     if(length(rho) > 1){
       
       
+      # propose shuffle
+      output_list <- shuffle(rho)
+      
+      rho_proposed <- output_list[1]
+      j <- output_list[2]
       
       
+      n_shuffle <- rho_proposed[j] + rho_proposed[j + 1]
       
-      
+      if(n_shuffle > 2){ 
+        # checking whether an actual shuffle occurred
+        # to make the code general each function here called checks this condition by its own, 
+        # but to fasten it, we check once and for all here
+        
+        
+        # compute eppf proposed
+        eppf_proposed <- log_EPPF(rho_proposed)
+        
+        
+        # update omega for new clusters
+        omega_proposed <- MH_omega_shuffle(burnin_omega, iter_omega, 
+                                           y, j, d, rho_proposed,
+                                           omega, sigma_0, 
+                                           alpha_omega, beta_omega, trunc)
+        
+        
+        # compute likelihood proposed
+        likelihood_proposed <- full_log_integrated_likelihood_after_shuffle(likelihood, y, 
+                                                                            rho_proposed, j, 
+                                                                            trunc, omega_proposed)
+        
+        
+        
+        # compute log MH-alpha
+        
+        
+        log_ratio <- MC_log_alpha_shuffle(q, j,
+                                          likelihood, eppf,
+                                          likelihood_proposed, eppf_proposed,
+                                          rho, rho_proposed)
+        
+        
+        # MH step
+        
+        tot_partition_shuffle <- tot_partition_shuffle + 1
+        
+        if(log(runif(1)) <= min(0, log_ratio)){
+          
+          rho <- rho_proposed
+          omega <- omega_proposed
+          likelihood <- likelihood_proposed
+          eppf <- eppf_proposed
+          acc_partition_merge <- acc_partition_merge + 1
+          
+        }
+        
+        
+        if(iter > 0){
+          
+          #TODO: save
+          
+        }
+        
+        
+        
+      }
+    
       
       
       
@@ -210,6 +273,8 @@ MCMC <- function(n_iter, burnin, y, q,
     
     #### UPDATE PARAMETERS ####
       
+    
+    
    
     
     
