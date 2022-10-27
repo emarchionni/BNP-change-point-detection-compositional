@@ -10,6 +10,18 @@ library('MASS')
 library('copula')
 
 
+source('MCMC_split_merge_shuffle.R')
+source('MCMC_alpha.R')
+source('MCMC_omega.R')
+source('likelihood.R')
+source('transition_densities.R')
+source('eppf.R')
+source('support_functions.R')
+source('update_parameters/MCMC_sigma.R')
+source('update_parameters/sample_theta.R')
+
+
+
 MCMC <- function(n_iter, burnin, y, q,
                  #method = 'MC_integration',
                  trunc,
@@ -17,30 +29,27 @@ MCMC <- function(n_iter, burnin, y, q,
                  alpha_omega, beta_omega, 
                  alpha_sigma, beta_sigma,
                  alpha_propose_sigma, beta_propose_sigma,
-                 alpha_theta, beta_theta,
-                 alpha_propose_theta, beta_propose_theta){
+                 alpha_theta, beta_theta){
   
 
   #### INITIALIZATION ####
   
-  prop_sigma <- array(0, n_iter)
-  acc_sigma <- 0
+  
+  
+  # saving containers
   Acc_sigma <- array(0, n_iter)
+  acc_sigma <- 0
   
-  prop_theta <- array(0, n_iter)
-  acc_theta <- 0
   Acc_theta <- array(0, n_iter)
+  acc_theta <- 0
   
-  
-  ### TODO: save accepted partition
-  prop_partition <- list()
+  Acc_partition_iter <- list()
   acc_partition_split <- 0
   acc_partition_merge <- 0
   acc_partition_shuffle <- 0
   tot_partition_split <- 0
   tot_partition_merge <- 0
   tot_partition_shuffle <- 0
-  Acc_partition <- array(0, n_iter)
   
   
   n <- dim(y)[1]
@@ -54,15 +63,17 @@ MCMC <- function(n_iter, burnin, y, q,
   k <- length(rho)
   
   # initial omega
-  omega <- array(0, c(k, d)) # cluster x component
-  ### TODO: initialize omega
+  omega <- array(rgamma(d * k, alpha_omega, beta_omega), c(k, d)) # cluster x component
+  
   
   # initial cluster likelihood
-  likelihood <- array(0, k)
-  ### TODO: initialize cluster likelihood
+  likelihood <- full_log_integrated_likelihood(y, rho, omega, n_clust, trunc)
   
+  # initial sigma
+  sigma <- rbeta(1, alpha_sigma, beta_sigma)
   
-  
+  # initial theta
+  theta <- rsgamma(-sigma, alpha_theta, beta_theta)
 
   for(iter in (-burnin+1):niter){
     
@@ -124,7 +135,6 @@ MCMC <- function(n_iter, burnin, y, q,
         
         ### TODO: save partition
         
-        
       }
       
       
@@ -182,8 +192,7 @@ MCMC <- function(n_iter, burnin, y, q,
       
       if(iter > 0){
         
-        ### TODO: save partition
-        
+        ### TODO: save 
         
       }
       
@@ -271,6 +280,10 @@ MCMC <- function(n_iter, burnin, y, q,
     }
     
     
+    # save partition
+    
+    if(r > 0)
+      Acc_partition_iter[[iter]] <- rho
     
     
     #### UPDATE PARAMETERS ####
@@ -279,10 +292,10 @@ MCMC <- function(n_iter, burnin, y, q,
     ### sigma
     
     # propose sigma
-    proposed_sigma <- rbeta(1, alpha_propose_sigma, beta_propose_sigma)
+    sigma_proposed <- rbeta(1, alpha_propose_sigma, beta_propose_sigma)
     
     # compute log MH-alpha
-    log_ratio <- MC_log_alpha_sigma(sigma_old, sigma_proposed,
+    log_ratio <- MC_log_alpha_sigma(sigma, sigma_proposed,
                                     alpha_sigma, beta_sigma,
                                     theta, alpha_theta, beta_theta,
                                     rho)
@@ -294,9 +307,9 @@ MCMC <- function(n_iter, burnin, y, q,
       
     }
     
-    if(iter > 0){
-      #TODO: save
-    }
+    if(iter > 0)
+      Acc_sigma[iter] <- sigma
+    
       
       
     
@@ -307,17 +320,16 @@ MCMC <- function(n_iter, burnin, y, q,
                           theta, sigma, 
                           alpha_theta, beta_theta)
     
-    if(iter > 0){
-      #TODO: save
-    }
+    if(iter > 0)
+      Acc_theta[iter] <- theta
+    
    
-    
-    
-    
     
     
   }
   
+  
+  ### TODO: return output
   
   
 }

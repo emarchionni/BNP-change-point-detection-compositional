@@ -1,29 +1,4 @@
 #### LOG INTEGRATED LIKELIHOOD CLUSTER ####
-split_data_partition <- function(y, rho){
-  
-  y_partition <- list()
-  
-  for(i in 1:length(rho)){
-    
-    if(i == 1){
-      
-      y_partition[[i]] <- y[1:rho[i], ]
-      
-    } else {
-      
-      first_index <- sum(rho[1:(i-1)]) + 1
-      last_index <- sum(rho[1:(i-1)]) + rho[i]
-      
-      y_partition[[i]] <- y[first_index:last_index,]
-      
-    }
-    
-  }
-  
-  return(y_partition)
-  
-}
-
 log_integrated_likelihood_cluster <- function(y, omega, n_clust, trunc){
   
   #'@param y: observation in the cluster / dim: time x components
@@ -42,7 +17,29 @@ log_integrated_likelihood_cluster <- function(y, omega, n_clust, trunc){
 }
 
 
+#### INITIALIZAZION LIKELIHOOD ####
 
+full_log_integrated_likelihood <- function(y, rho, omega, n_clust, trunc){
+  
+  y_partition <- split_data_partition(y, rho)
+  
+  k <- length(rho)
+  
+  likelihood <- array(0, k)
+  
+  for (i in 1:k) {
+    
+    y_clust <- y_partition[[i]]
+    n_clust <- rho[i]
+    omega_clust <- omega[i, ]
+    
+    likelihood[i] <- log_integrated_likelihood_cluster(y_clust, omega_clust, n_clust, trunc)
+    
+  }
+  
+  return(likelihood)
+  
+}
 
 #### LOG INTEGRATED LIKELIHOOD SPLIT ####
 full_log_integrated_likelihood_after_split <- function(old_likelihood, y, 
