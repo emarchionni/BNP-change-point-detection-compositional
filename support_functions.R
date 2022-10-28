@@ -20,6 +20,7 @@ pochhammer <- function(x, factor){
   
   value <- 1
   
+
   if(factor == 0)
     return(value)
   

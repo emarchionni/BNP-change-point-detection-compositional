@@ -70,27 +70,31 @@ Q_n_poly <- function(y_0, y, omega, n){
 
 
 #### TRANSITION DENSITIES FUNCTION ####
-transition_densities <- function(y_0, y, omega, trunc){
+
+log_transition_densities <- function(y_0, y, omega, trunc){
   
   value_1 <- ddirichlet(y, omega)
-  log_Qn <- array(0, trunc + 1)
+  Qn <- array(0, trunc + 1)
   lambda_n <- array(0, trunc + 1)
   
   omega_norm <- sum(omega)
   
-  for(n in 1:trunc){
+  for(n in 0:trunc){
     
-    if(is.nan(log(Q_n_poly(y_0, y, omega, n))))
-      browser()
-    log_Qn[n + 1] <- log(Q_n_poly(y_0, y, omega, n))
+    Qn[n + 1] <- Q_n_poly(y_0, y, omega, n)
     lambda_n[n + 1] <- (.5) * n * (n - 1 + omega_norm)
     
   }
+  
+  
+  ## TODO: how to fix this? 
+  if((sum(exp(- lambda_n) * Qn) + value_1) < 0){
+    warning('transition 0 probability')
+    browser()
+  }
     
   
-    
-  # browser()
-  return(sum(exp(-lambda_n + log_Qn)) + value_1)
-    
+  return(log(sum(exp(- lambda_n) * Qn) + value_1))
+  
   
 }

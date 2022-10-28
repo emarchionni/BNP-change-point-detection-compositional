@@ -10,7 +10,8 @@ log_integrated_likelihood_cluster <- function(y, omega, n_clust, trunc){
   value <- ddirichlet(y[1,], omega, log = T)
   
   for(i in 2:n_clust)
-    value <- value + log(transition_densities(y[i-1, ], y[i, ], omega, trunc))
+    value <- value + log_transition_densities(y[i-1, ], y[i, ], omega, trunc)
+  
   
   return(value)
   
@@ -108,11 +109,23 @@ full_log_integrated_likelihood_after_merge <- function(old_likelihood, y,
   #'@param omega: updated omega / dim: new_clusters x components
   #'@param old_likelihood: nonupdated likelihood / dim: old_likelihood
 
+  k_proposed <- length(rho_proposed)
+  
   y_partition <- split_data_partition(y, rho_proposed)
   
   n_clust <- rho_proposed[j]
   y_clust <- y_partition[[j]]
-  omega_clust <- omega[j, ]
+  
+  if(k_proposed == 1){
+    
+    omega_clust <- omega
+    
+  } else {
+    
+    omega_clust <- omega[j, ]
+    
+  }
+  
   
   new_value <- log_integrated_likelihood_cluster(y_clust, omega_clust, n_clust, trunc)
   
@@ -145,7 +158,7 @@ full_log_integrated_likelihood_after_merge <- function(old_likelihood, y,
 
 #### LOG INTEGRATED LIKELIHOOD SHUFFLE ####
 full_log_integrated_likelihood_after_shuffle <- function(old_likelihood, y, 
-                                                         rho_proposed, j, 
+                                                         rho, rho_proposed, j, 
                                                          trunc, omega){
   
   
@@ -153,9 +166,9 @@ full_log_integrated_likelihood_after_shuffle <- function(old_likelihood, y,
   #'@param old_likelihood: nonupdated likelihood / dim: likelihood
   
   
-  n_shuffle <- rho_proposed[j] + rho_proposed[j + 1]
+
   
-  if(n_shuffle == 2) # i.e. no actual shuffle occurred
+  if(rho[j] == rho_proposed[j]) # i.e. no actual shuffle occurred
     return(old_likelihood)
   
   

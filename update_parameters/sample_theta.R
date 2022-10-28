@@ -24,7 +24,7 @@ sample_theta <- function(n, k,
   
   index_chosen <- sample(0:(k+1), size = 1, prob = exp(w))
   
-  return(rsgamma(-sigma, alpha_theta + j, beta_theta + t - log(z)))
+  return(rsgamma(-sigma, alpha_theta + j, beta_theta + 1 - log(z)))
   
   
   

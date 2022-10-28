@@ -39,7 +39,7 @@ MH_omega <- function(burnin_omega, iter_omega,
     
     ratio <- numerator - denominator
     
-    if(is.nan(ratio)) browser()
+    #if(is.nan(ratio)) browser()
     
     if(log(runif(1)) <= min(0, ratio)){
       old_omega <- proposed_omega
@@ -63,7 +63,7 @@ MH_omega <- function(burnin_omega, iter_omega,
 #### MH OMEGA SPLIT ####
 
 MH_omega_split <- function(burnin_omega, iter_omega, 
-                           y, j, d, rho_proposed,
+                           y, j, d, rho, rho_proposed,
                            omega, sigma_0, 
                            alpha_omega, beta_omega, trunc){
   
@@ -75,7 +75,19 @@ MH_omega_split <- function(burnin_omega, iter_omega,
   
   new_value <- array(0, c(2,d))
   
-  initial_omega <- omega[j, ]
+  
+  k_old <- length(rho)
+  
+  if(k_old == 1){
+    
+    initial_omega <- omega
+    
+  } else {
+    
+    initial_omega <- omega[j, ]
+    
+  }
+  
   
   
   for(clust in 0:1){
@@ -84,12 +96,11 @@ MH_omega_split <- function(burnin_omega, iter_omega,
     y_clust <- y_partition[[j + clust]]
     
     
-    
     new_value[clust + 1, ] <- MH_omega(burnin_omega, iter_omega, y_clust, 
                                        initial_omega, sigma_0, 
                                        alpha_omega, beta_omega, 
                                        n_clust, trunc)
-    
+     
     
   }
   
@@ -163,15 +174,15 @@ MH_omega_merge <- function(burnin_omega, iter_omega,
  
  if(j == 1){
    
-   new_omega <- rbind(new_omega, omega[3:k, ])
+   new_omega <- rbind(new_value, omega[3:k, ])
    
  } else if (j == (k-1)){
    
-   new_omega <- rbind(omega[1:(k-2), ], new_omega)
+   new_omega <- rbind(omega[1:(k-2), ], new_value)
    
  } else {
    
-   new_omega <- rbind(omega[1:(j-1), ], new_omega, omega[(j+2):k, ])
+   new_omega <- rbind(omega[1:(j-1), ], new_value, omega[(j+2):k, ])
    
  }
    
@@ -185,16 +196,16 @@ MH_omega_merge <- function(burnin_omega, iter_omega,
 #### MH OMEGA SHUFFLE ####
 
 MH_omega_shuffle <- function(burnin_omega, iter_omega, 
-                           y, j, d, rho_proposed,
+                           y, j, d, 
+                           rho, rho_proposed,
                            omega, sigma_0, 
                            alpha_omega, beta_omega, trunc){
   
   #'@param omega: nonupdated omega / dim: old_clusters x components
   #'@param j: j and j+1 are the shuffled clusters
   
-  n_shuffle <- rho_proposed[j] + rho_proposed[j+1]
   
-  if(n_shuffle == 2) # i.e. no actual shuffle occurred
+  if(rho[j] == rho_proposed[j]) # i.e. no actual shuffle occurred
     return(omega)
   
   y_partition <- split_data_partition(y, rho_proposed)

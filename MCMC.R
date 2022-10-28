@@ -8,6 +8,7 @@
 library('extraDistr')
 library('MASS')
 library('copula')
+library('pbmcapply')
 
 
 source('MCMC_split_merge_shuffle.R')
@@ -22,10 +23,10 @@ source('update_parameters/sample_theta.R')
 
 
 
-MCMC <- function(n_iter, burnin, y, q,
+MCMC <- function(niter, burnin, y, q,
                  #method = 'MC_integration',
                  trunc,
-                 iter_omega, burnin_omega,
+                 iter_omega, burnin_omega, sigma_proposal_omega,
                  alpha_omega, beta_omega, 
                  alpha_sigma, beta_sigma,
                  alpha_propose_sigma, beta_propose_sigma,
@@ -40,8 +41,7 @@ MCMC <- function(n_iter, burnin, y, q,
   Acc_sigma <- array(0, n_iter)
   acc_sigma <- 0
   
-  Acc_theta <- array(0, n_iter)
-  acc_theta <- 0
+  Theta <- array(0, n_iter)
   
   Acc_partition_iter <- list()
   acc_partition_split <- 0
@@ -56,15 +56,17 @@ MCMC <- function(n_iter, burnin, y, q,
   d <- dim(y)[2]
   
   # initial partition
-  rho <- c(as.integer(n/2))
-  rho <- c(rho, n-rho)
+  #rho <- c(as.integer(n/2))
+  #rho <- c(rho, n-rho)
+  rho <- rep(1,n)
   
   # number of clusters
   k <- length(rho)
   
-  # initial omega
-  omega <- array(rgamma(d * k, alpha_omega, beta_omega), c(k, d)) # cluster x component
   
+  # initial omega
+  omega <- array(1, c(k, d)) # cluster x component
+  # rgamma(d * k, alpha_omega, beta_omega)
   
   # initial cluster likelihood
   likelihood <- full_log_integrated_likelihood(y, rho, omega, n_clust, trunc)
@@ -74,14 +76,23 @@ MCMC <- function(n_iter, burnin, y, q,
   
   # initial theta
   theta <- rsgamma(-sigma, alpha_theta, beta_theta)
-
+  
+  # eppf
+  eppf <- log_EPPF(rho, theta, sigma)
+  
+  # progress bar
+  # pb <- progressBar(min = -(burnin-1), max = niter, style = "ETA")
+  
+  # MCMC
   for(iter in (-burnin+1):niter){
     
     # TODO: what and how to save
     
+    print(iter)
+    
     #### MERGE & SPLIT ####
     
-     
+    k <- length(rho)
 
     if(runif(1) <= (q * ifelse(k < n, 1, 0) * ifelse(k > 1, 1, 0) + ifelse(k == 1, 1, 0)) ){
       # split
@@ -98,12 +109,12 @@ MCMC <- function(n_iter, burnin, y, q,
       
       
       # compute eppf proposed
-      eppf_proposed <- log_EPPF(rho_proposed)
+      eppf_proposed <- log_EPPF(rho_proposed, theta, sigma)
       
       # update omega for new clusters
       omega_proposed <- MH_omega_split(burnin_omega, iter_omega, 
-                                  y, j, rho, rho_proposed,
-                                  omega, sigma_0, 
+                                  y, j, d, rho, rho_proposed,
+                                  omega, sigma_proposal_omega, 
                                   alpha_omega, beta_omega, trunc)
       
       # compute likelihood proposed
@@ -112,9 +123,9 @@ MCMC <- function(n_iter, burnin, y, q,
                                                                         omega_proposed)
       
       # compute log MH-alpha
-      log_ratio <- MC_log_alpha_split(q, n, j,
+      log_ratio <- MC_log_alpha_split(q, j,
                                       likelihood, eppf, 
-                                      likelihood_porposed, eppf_proposed,
+                                      likelihood_proposed, eppf_proposed,
                                       rho, rho_proposed)
       
       # MH step
@@ -146,17 +157,17 @@ MCMC <- function(n_iter, burnin, y, q,
       # propose merge
       output_list <- merge(rho)
       
-      rho_proposed <- output_list[1]
-      j <- output_list[2]
+      rho_proposed <- output_list[[1]]
+      j <- output_list[[2]]
       
       # compute eppf proposed
-      eppf_proposed <- log_EPPF(rho_proposed)
+      eppf_proposed <- log_EPPF(rho_proposed, theta, sigma)
       
       
       # update omega for new clusters
       omega_proposed <- MH_omega_merge(burnin_omega, iter_omega, 
-                                       y, j, d, rho_proposed,
-                                       omega, sigma_0, 
+                                       y, j, rho_proposed,
+                                       omega, sigma_proposal_omega, 
                                        alpha_omega, beta_omega, trunc)
       
       
@@ -208,32 +219,32 @@ MCMC <- function(n_iter, burnin, y, q,
       # propose shuffle
       output_list <- shuffle(rho)
       
-      rho_proposed <- output_list[1]
-      j <- output_list[2]
+      rho_proposed <- output_list[[1]]
+      j <- output_list[[2]]
       
       
-      n_shuffle <- rho_proposed[j] + rho_proposed[j + 1]
       
-      if(n_shuffle > 2){ 
+      if(rho_proposed[j] != rho[j]){ 
         # checking whether an actual shuffle occurred
         # to make the code general each function here called checks this condition by its own, 
         # but to fasten it, we check once and for all here
         
         
         # compute eppf proposed
-        eppf_proposed <- log_EPPF(rho_proposed)
+        eppf_proposed <- log_EPPF(rho_proposed, theta, sigma)
         
         
         # update omega for new clusters
         omega_proposed <- MH_omega_shuffle(burnin_omega, iter_omega, 
-                                           y, j, d, rho_proposed,
-                                           omega, sigma_0, 
+                                           y, j, d, 
+                                           rho, rho_proposed,
+                                           omega, sigma_proposal_omega, 
                                            alpha_omega, beta_omega, trunc)
         
         
         # compute likelihood proposed
         likelihood_proposed <- full_log_integrated_likelihood_after_shuffle(likelihood, y, 
-                                                                            rho_proposed, j, 
+                                                                            rho, rho_proposed, j, 
                                                                             trunc, omega_proposed)
         
         
@@ -282,7 +293,7 @@ MCMC <- function(n_iter, burnin, y, q,
     
     # save partition
     
-    if(r > 0)
+    if(iter > 0)
       Acc_partition_iter[[iter]] <- rho
     
     
@@ -321,15 +332,17 @@ MCMC <- function(n_iter, burnin, y, q,
                           alpha_theta, beta_theta)
     
     if(iter > 0)
-      Acc_theta[iter] <- theta
+      Theta[iter] <- theta
     
    
     
+    # progress bar
+    # setTxtProgressBar(pb, iter)
     
   }
   
   
   ### TODO: return output
   
-  
+  return(Acc_partition_iter)
 }
