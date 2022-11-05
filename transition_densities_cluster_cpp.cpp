@@ -85,7 +85,7 @@ double ddirichlet_cpp(Rcpp::NumericVector y, Rcpp::NumericVector omega){
 	
 	for(int i = 0; i < y.length(); ++i){
 		value *= (std::pow(y[i], omega[i] - 1) / std::tgamma(omega[i]));
-		// TODO missing gamma's
+		
 		
 	}
 	

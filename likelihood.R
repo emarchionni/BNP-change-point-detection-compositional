@@ -1,11 +1,12 @@
 #### LOG INTEGRATED LIKELIHOOD CLUSTER ####
+
 log_integrated_likelihood_cluster <- function(y, omega, n_clust, trunc){
   
   #'@param y: observation in the cluster / dim: time x components
   #'@param omega: omega of cluster / dim: d
   
   if(n_clust == 1)
-    return(ddirichlet(y,omega, log = T))
+    return(ddirichlet(y, omega, log = T))
   
   value <- ddirichlet(y[1,], omega, log = T)
   
