@@ -266,6 +266,7 @@ double log_transition_densities(Rcpp::NumericVector y_0, Rcpp::NumericVector y, 
 
 // LOG INTEGRATED LIKELIHOOD CLUSTER
 
+// [[Rcpp::export]]
 double log_integrated_likelihood_cluster(Rcpp::NumericMatrix y, Rcpp::NumericVector omega, int n_clust, int trunc){
 	// y: observation in the cluster / dim: time x components
 	// omega: omega of cluster / dim: d

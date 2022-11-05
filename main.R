@@ -38,6 +38,7 @@ beta_propose_sigma <- 1
 alpha_theta <- 1
 beta_theta <- 1
 
+source('MCMC.R')
 
 output <- MCMC(n_iter, burnin, y, q,
                  #method = 'MC_integration',
