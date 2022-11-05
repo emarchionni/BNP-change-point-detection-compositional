@@ -9,17 +9,18 @@ library('extraDistr')
 library('MASS')
 library('copula')
 library('pbmcapply')
+library('Rcpp')
 
-
+sourceCpp('transition_densities_cluster_cpp.cpp')
 source('MCMC_split_merge_shuffle.R')
 source('MCMC_alpha.R')
 source('MCMC_omega.R')
 source('likelihood.R')
-source('transition_densities.R')
 source('eppf.R')
 source('support_functions.R')
 source('update_parameters/MCMC_sigma.R')
 source('update_parameters/sample_theta.R')
+
 
 
 

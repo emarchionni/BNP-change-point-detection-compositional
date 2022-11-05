@@ -20,7 +20,7 @@ pochhammer <- function(x, factor){
   
   value <- 1
   
-
+  
   if(factor == 0)
     return(value)
   
@@ -87,83 +87,3 @@ split_data_partition <- function(y, rho){
   return(y_partition)
   
 }
-
-
-#### GET WEAK COMPOSITIIONS OF INTEGERS ####
-
-# weak compositions
-
-get_first_weak_composition <- function(m, d)
-{
-  composition <- array(0,c(1,d))
-  
-  for (i in 1:(d-1)) {
-    
-    composition[i] = 0
-    
-  }
-  composition[d] = m
-  #browser()
-  return(composition)
-}
-
-
-get_next_weak_composition <- function(m, d, composition)
-{
-  if (composition[1] == m){
-    
-    return(F)
-    
-  }
-  
-  # there's an i with composition[i] > 0, and it is not 0. find the last one
-  last = d
-  
-  while (composition[last] == 0) {
-    
-    #browser()
-    last <- last-1
-    
-  }
-  
-  
-  z = composition[last]
-  composition[last - 1] = composition[last - 1] + 1
-  composition[last] = 0
-  composition[d] = z - 1
-  return(composition)
-  
-}
-
-
-
-get_all_weak_composition <- function(m, d) {
-  
-  n_vec <- array(0, c(0, d))
-  
-  
-  composition <- get_first_weak_composition(m, d)
-  
-  while(is.array(composition)){
-    
-    if(is.array(composition)){
-      
-      n_vec <- rbind(n_vec, composition)
-      
-    }
-    
-    composition <- get_next_weak_composition(m, d, composition)
-    
-  }
-  
-  
-  
-  if(dim(n_vec)[1]!=choose(m+d-1, m))
-    warning('Dimension of array and number of weak compositions do not agree')
-  
-  return(n_vec)
-  
-}
-
-
-

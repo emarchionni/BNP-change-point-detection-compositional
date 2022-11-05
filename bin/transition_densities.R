@@ -2,7 +2,6 @@
 
 
 
-
 # Zeta_m
 
 zeta_m <- function(y_0, y, omega, m){
@@ -68,33 +67,3 @@ Q_n_poly <- function(y_0, y, omega, n){
 }
 
 
-
-#### TRANSITION DENSITIES FUNCTION ####
-
-log_transition_densities <- function(y_0, y, omega, trunc){
-  
-  value_1 <- ddirichlet(y, omega)
-  Qn <- array(0, trunc + 1)
-  lambda_n <- array(0, trunc + 1)
-  
-  omega_norm <- sum(omega)
-  
-  for(n in 0:trunc){
-    
-    Qn[n + 1] <- Q_n_poly(y_0, y, omega, n)
-    lambda_n[n + 1] <- (.5) * n * (n - 1 + omega_norm)
-    
-  }
-  
-  
-  ## TODO: how to fix this? 
-  if((sum(exp(- lambda_n) * Qn) + value_1) < 0){
-    warning('transition 0 probability')
-    browser()
-  }
-    
-  
-  return(log(sum(exp(- lambda_n) * Qn) + value_1))
-  
-  
-}
