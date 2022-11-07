@@ -22,10 +22,10 @@ remove(list = c('omega1', 'y1', 'omega2', 'y2', 'omega3', 'y3'))
 
 setwd('C:/Users/edoar/Desktop/Tesi/Code/BNP-change-point-detection-compositional')
 
-n_iter <- 5
-burnin <- 1
+n_iter <- 1000
+burnin <- 500
 q <- .5
-trunc <- 5
+trunc <- 3
 iter_omega <- 100
 burnin_omega <- 50
 sigma_proposal_omega <- 1

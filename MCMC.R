@@ -66,8 +66,8 @@ MCMC <- function(niter, burnin, y, q,
   
   
   # initial omega
-  omega <- array(rgamma(d * k, alpha_omega, beta_omega), c(k, d)) # cluster x component
-
+  omega <- array(1, c(k, d)) # cluster x component
+  #rgamma(d * k, alpha_omega, beta_omega)
   
   # initial cluster likelihood
   likelihood <- full_log_integrated_likelihood(y, rho, omega, k, trunc)

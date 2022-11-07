@@ -258,6 +258,7 @@ double log_transition_densities(Rcpp::NumericVector y_0, Rcpp::NumericVector y, 
 	
   }
   
+
   return std::log(value);
   
 }
@@ -267,28 +268,30 @@ double log_transition_densities(Rcpp::NumericVector y_0, Rcpp::NumericVector y, 
 // LOG INTEGRATED LIKELIHOOD CLUSTER
 
 // [[Rcpp::export]]
-double log_integrated_likelihood_cluster_cpp(Rcpp::NumericMatrix y, Rcpp::NumericVector omega, int n_clust, int trunc){
+double log_integrated_likelihood_cluster_multiple_cpp(Rcpp::NumericMatrix y, Rcpp::NumericVector omega, int trunc){
 	// y: observation in the cluster / dim: time x components
 	// omega: omega of cluster / dim: d
 	
 	int d = omega.length();
+	int n_clust = y.nrow();
 	Rcpp::NumericVector y_curr(d);
 	
 	for(int j = 0; j < d; ++j)
-		y_curr[j] = y[0, j];
+		y_curr[j] = y(0, j);
 		
 	
 	double value = std::log(ddirichlet_cpp(y_curr, omega));
 	
-	if(n_clust == 1)
-		return value;
 	
-	Rcpp::NumericVector y_previous = y_curr;
+	Rcpp::NumericVector y_previous(d);
 	
 	for(int i = 1; i < n_clust; ++i){
 		
+		y_previous = y_curr;
+		
 		for(int j = 0; j < d; ++j)
-			y_curr[j] = y[i, j];
+			y_curr[j] = y(i, j);
+		
 		
 		value += log_transition_densities(y_previous, y_curr, omega, trunc);
 		
