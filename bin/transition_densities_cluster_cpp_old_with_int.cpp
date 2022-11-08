@@ -6,8 +6,7 @@
 
 // [[Rcpp::export]]
 double pochhammer_cpp(double x, unsigned factor){
-  
-	double value = 1.;
+	int value = 1;
 	
 	if(factor == 0)
 		return value;
@@ -20,33 +19,31 @@ double pochhammer_cpp(double x, unsigned factor){
 
 
 // [[Rcpp::export]]
-double factorial_cpp(double n){
-  
-  
-  double fact_n = 1.;
-  
-  if(n == 0)
-    return fact_n;
-  
-  for(int i = 1; i <= n; ++i)
-    fact_n *= i;
-  
-  return fact_n;
+int factorial_cpp(int n){
+	
+	if(n == 0)
+		return 1;
+	
+	int fact_n = 1;
+	
+	for(int i = 1; i <= n; ++i)
+		fact_n *= i;
+	
+	return fact_n;
 }
 
 
-// [[Rcpp::export]]
 double prod_factorial_vector_cpp(Rcpp::NumericVector y){
   
-  double value = 1.;
+  int value = 1;
   
   for(int i = 0; i < y.length(); ++i)
     value *= factorial_cpp(y[i]);
+    
   
   return value;
   
 }
-
 
 // [[Rcpp::export]]
 double sum_cpp(Rcpp::NumericVector y){
@@ -60,16 +57,16 @@ double sum_cpp(Rcpp::NumericVector y){
 }
 
 
-//// [[Rcpp::export]]	
-//double prod_cpp(Rcpp::NumericVector y){
-//	
-//	double value = 1;
-//	
-//	for(int i = 0; i < y.length(); ++i)
-//		value *= y[i];
-//	
-//	return value;
-//}	
+// [[Rcpp::export]]	
+double prod_cpp(Rcpp::NumericVector y){
+	
+	double value = 1;
+	
+	for(int i = 0; i < y.length(); ++i)
+		value *= y[i];
+	
+	return value;
+}	
 
 //// [[Rcpp::export]]	
 //Rcpp::NumericVector sum_vectors_cpp(Rcpp::NumericVector a, Rcpp::NumericVector b){
@@ -87,13 +84,13 @@ double sum_cpp(Rcpp::NumericVector y){
 // [[Rcpp::export]]	
 double ddirichlet_cpp(Rcpp::NumericVector y, Rcpp::NumericVector omega){
 	
-	double value = 1.;
+	double value = 1;
 	
 	for(int i = 0; i < y.length(); ++i){
-		value *= (std::pow(y[i], omega[i] - 1) / std::tgamma(omega[i]));
+		value *= (std::pow(y[i], omega[i] - 1) / std::tgamma(omega[i]) );
 	}
 	
-	value *= std::tgamma(Rcpp::sum(omega));
+	value *= std::tgamma(sum_cpp(omega));
 	
 	return value;
 	
@@ -188,7 +185,7 @@ Rcpp::NumericMatrix get_all_weak_composition_cpp(int m, int d){
 // TRANSITION DENSITIES
 
 // [[Rcpp::export]]
-double zeta_m_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::NumericVector omega, int m){
+double zeta_m(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::NumericVector omega, int m){
 	
 	if(m == 0)
 		return 1.;
@@ -203,14 +200,14 @@ double zeta_m_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::NumericV
 	
 	for(int i = 0; i < num_compositions; ++i){
 		
+		
 		Rcpp::NumericVector curr_composition(d);
-	  
 	  for(int j = 0; j < d; ++j)
 	    curr_composition[j] = compositions(i, j);
 	  
 	  Rcpp::NumericVector sum_omega = omega + curr_composition;
 		
-		value += ( factorial_cpp(m) * pow(Rcpp::sum(y_0), curr_composition[d - 1]) * ddirichlet_cpp(y, sum_omega) / prod_factorial_vector_cpp(curr_composition));
+		value += ( factorial_cpp(m) * pow(sum_cpp(y_0), curr_composition[d]) * ddirichlet_cpp(y, sum_omega) / prod_factorial_vector_cpp(curr_composition));
 		
 	}
 	
@@ -226,14 +223,14 @@ double Q_n_poly_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::Numeri
 	if(n == 0)
 		return 1.;
 	
-	double omega_norm = Rcpp::sum(omega);
+	double omega_norm = sum_cpp(omega);
 	double value = .0;
 	double p = .0;
 	double z_m = .0;
 	
 	for(int m = 0; m <= n; ++m){
 		p = pochhammer_cpp(omega_norm + m, n - 1);
-		z_m = zeta_m_cpp(y_0, y , omega, m);
+		z_m = zeta_m(y_0, y , omega, m);
 
 		
 		value += ( pow(-1, n - m) * R::choose(n, m) * p * z_m );
@@ -247,26 +244,23 @@ double Q_n_poly_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::Numeri
 
 
 // [[Rcpp::export]]
-double log_transition_densities_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::NumericVector omega, int trunc){
+double log_transition_densities(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::NumericVector omega, int trunc){
   
   double value = ddirichlet_cpp(y, omega);
   double Qn = 0;
   double lambda_n = 0;
-  double omega_norm = Rcpp::sum(omega);
+  double omega_norm = sum_cpp(omega);
   
   for(int n = 0; n <= trunc; ++n){
 	  
     Qn = Q_n_poly_cpp(y_0, y, omega, n);
     lambda_n = (.5) * n * (n - 1 + omega_norm);
-    value += (std::exp(-lambda_n) * Qn);
+    value += std::exp(-lambda_n) * Qn;
 	
   }
   
-  if(value <= 0){
-    Rcpp::warning("transition negative or null");
-    return 0.;
-  }
-	  
+  if(value <= 0)
+	  return .0;
 
   return std::log(value);
   
@@ -281,8 +275,8 @@ double log_integrated_likelihood_cluster_multiple_cpp(Rcpp::NumericMatrix y, Rcp
 	// y: observation in the cluster / dim: time x components
 	// omega: omega of cluster / dim: d
 	
-	int d = omega.length();
-	int n_clust = y.nrow();
+	int d = y.cols();
+	int n_clust = y.rows();
 	Rcpp::NumericVector y_curr(d);
 	
 	for(int j = 0; j < d; ++j)
@@ -302,11 +296,13 @@ double log_integrated_likelihood_cluster_multiple_cpp(Rcpp::NumericMatrix y, Rcp
 			y_curr[j] = y(i, j);
 		
 		
-		value += log_transition_densities_cpp(y_previous, y_curr, omega, trunc);
+		value += log_transition_densities(y_previous, y_curr, omega, trunc);
 		
 		
 	}
+
 	
 	return value;
+	
 	
 }

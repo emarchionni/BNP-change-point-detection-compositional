@@ -16,11 +16,8 @@ log_integrated_likelihood_cluster <- function(y, omega, n_clust, trunc){
   #}
   #return(value)
   
-  value <- log_integrated_likelihood_cluster_multiple_cpp(y, omega, trunc)
-  
-  if(is.nan(value)) browser()
-  
-  return(value)
+  return(log_integrated_likelihood_cluster_multiple_cpp(y, omega, trunc))
+
   
 }
 

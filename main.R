@@ -7,14 +7,19 @@ library('extraDistr')
 library('MASS')
 library('copula')
 
-omega1 <- c(.5, .5,.5)
+omega1 <- c(.8, .6, .9)
+omega1_mean <- omega1/sum(omega1)
 y1 <- rdirichlet(50, omega1)
 
-omega2 <- c(1., 1., 1.)
+omega2 <- c(0.8, 1.2, 1.7)
+omega2_mean <- omega2/sum(omega2)
 y2 <- rdirichlet(50, omega2)
 
-omega3 <- c(1.5, 1.5, 1.5)
+omega3 <- c(.7, .2, 1.3)
+omega3_mean <- omega3/sum(omega3)
 y3 <- rdirichlet(50, omega3)
+
+omega1_mean; omega2_mean; omega3_mean;
 
 y <- rbind(y1, y2, y3)
 
@@ -23,12 +28,12 @@ remove(list = c('omega1', 'y1', 'omega2', 'y2', 'omega3', 'y3'))
 setwd('C:/Users/edoar/Desktop/Tesi/Code/BNP-change-point-detection-compositional')
 
 n_iter <- 1000
-burnin <- 500
-q <- .5
-trunc <- 3
+burnin <- 0
+q <- .8
+trunc <- 5
 iter_omega <- 100
 burnin_omega <- 50
-sigma_proposal_omega <- 1
+sigma_proposal_omega <- 0.01
 alpha_omega <- 2 
 beta_omega <- 2
 alpha_sigma <- 1

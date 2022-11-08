@@ -66,8 +66,8 @@ MCMC <- function(niter, burnin, y, q,
   
   
   # initial omega
-  omega <- array(1, c(k, d)) # cluster x component
-  #rgamma(d * k, alpha_omega, beta_omega)
+  omega <- array(rgamma(d * k, alpha_omega, beta_omega), c(k, d)) # cluster x component
+  
   
   # initial cluster likelihood
   likelihood <- full_log_integrated_likelihood(y, rho, omega, k, trunc)
@@ -89,7 +89,13 @@ MCMC <- function(niter, burnin, y, q,
     
     # TODO: what and how to save
     
-    print(iter)
+    
+    
+    if(iter > 400 || iter %% 100 == 0){
+      print(iter)
+      print(rho)
+    }
+      
     
     #### MERGE & SPLIT ####
     
@@ -114,7 +120,7 @@ MCMC <- function(niter, burnin, y, q,
       
       # update omega for new clusters
       omega_proposed <- MH_omega_split(burnin_omega, iter_omega, 
-                                  y, j, d, rho, rho_proposed,
+                                  y, j, d, rho_proposed,
                                   omega, sigma_proposal_omega, 
                                   alpha_omega, beta_omega, trunc)
       
@@ -133,7 +139,8 @@ MCMC <- function(niter, burnin, y, q,
       
       tot_partition_split <- tot_partition_split + 1 
       
-      if(log(runif(1)) <= min(0, log_ratio)){
+      
+      if((log(runif(1)) <= min(0, log_ratio)) || (exp(log_ratio) == 0)){
         
         rho <- rho_proposed
         omega <- omega_proposed
@@ -192,7 +199,7 @@ MCMC <- function(niter, burnin, y, q,
       
       tot_partition_merge <- tot_partition_merge + 1
       
-      if(log(runif(1)) <= min(0, log_ratio)){
+      if((log(runif(1)) <= min(0, log_ratio)) || (exp(log_ratio) == 0)){
         
         rho <- rho_proposed
         omega <- omega_proposed
@@ -345,5 +352,10 @@ MCMC <- function(niter, burnin, y, q,
   
   ### TODO: return output
   
-  return(Acc_partition_iter)
+  return(list(partitions = Acc_partition_iter,
+              theta = Theta,
+              sigma = acc_sigma,
+              prop_acc_partition_split = (acc_partition_split / tot_partition_split),
+              prop_acc_partition_merge = (acc_partition_merge / tot_partition_merge),
+              prop_acc_partition_shuffle = (acc_partition_shuffle / tot_partition_shuffle)))
 }
