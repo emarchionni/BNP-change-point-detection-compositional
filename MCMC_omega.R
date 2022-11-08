@@ -27,7 +27,7 @@ MH_omega <- function(burnin_omega, iter_omega,
     denominator <- log_integrated_likelihood_cluster(y, exp(old_omega), n_clust, trunc)
     
     for(j in 1:d){
-      
+      if(numerator == Inf || denominator == Inf) browser()
       numerator <- numerator + dgamma(exp(proposed_omega[j]), shape = alpha_omega, rate = beta_omega, log = T)
       denominator <- denominator + dgamma(exp(old_omega[j]), shape = alpha_omega, rate = beta_omega, log = T)
       

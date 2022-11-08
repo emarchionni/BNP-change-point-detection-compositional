@@ -11,7 +11,7 @@ MC_log_alpha_sigma <- function(sigma_old, sigma_proposed,
                                theta, alpha_theta, beta_theta,
                                rho)
   
-  log_ratio <- log_ratio - posterior_sigma(sigma, alpha_sigma, beta_sigma,
+  log_ratio <- log_ratio - posterior_sigma(sigma_old, alpha_sigma, beta_sigma,
                                            theta, alpha_theta, beta_theta,
                                            rho)
   
@@ -26,7 +26,7 @@ MC_log_alpha_sigma <- function(sigma_old, sigma_proposed,
 posterior_sigma <- function(sigma, alpha_sigma, beta_sigma,
                             theta, alpha_theta, beta_theta,
                             rho){
-  
+
   n <- sum(rho)
   k <- length(rho)
   

@@ -182,7 +182,7 @@ Rcpp::NumericMatrix get_all_weak_composition_cpp(int m, int d){
 // TRANSITION DENSITIES
 
 // [[Rcpp::export]]
-double zeta_m(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::NumericVector omega, int m){
+double zeta_m_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::NumericVector omega, int m){
 	
 	if(m == 0)
 		return 1.;
@@ -227,7 +227,7 @@ double Q_n_poly_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::Numeri
 	
 	for(int m = 0; m <= n; ++m){
 		p = pochhammer_cpp(omega_norm + m, n - 1);
-		z_m = zeta_m(y_0, y , omega, m);
+		z_m = zeta_m_cpp(y_0, y , omega, m);
 
 		
 		value += ( pow(-1, n - m) * R::choose(n, m) * p * z_m );
@@ -241,7 +241,7 @@ double Q_n_poly_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::Numeri
 
 
 // [[Rcpp::export]]
-double log_transition_densities(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::NumericVector omega, int trunc){
+double log_transition_densities_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::NumericVector omega, int trunc){
   
   double value = ddirichlet_cpp(y, omega);
   double Qn = 0;
@@ -293,7 +293,7 @@ double log_integrated_likelihood_cluster_multiple_cpp(Rcpp::NumericMatrix y, Rcp
 			y_curr[j] = y(i, j);
 		
 		
-		value += log_transition_densities(y_previous, y_curr, omega, trunc);
+		value += log_transition_densities_cpp(y_previous, y_curr, omega, trunc);
 		
 		
 	}
