@@ -2,53 +2,20 @@
 
 
 
-MH_omega <- function(burnin_omega, iter_omega, 
+MH_omega <- function(iter_omega, 
                      y, 
                      d, sigma_0, 
                      alpha_omega, beta_omega, 
                      n_clust, trunc){
   
   #'@param y: observation in the cluster / dim: time x components
-  #'@param omega_initial: where to center Gaussian / dim: d
+  
+  if(n_clust == 1)
+    return(MH_omega_cluster_single(iter_omega, y, d, sigma_0, alpha_omega, beta_omega, trunc))
   
   
-  sigma_matrix <- diag(d) * sigma_0
+  return(MH_omega_cluster_multi(iter_omega, y, d, sigma_0, alpha_omega, beta_omega, trunc))
   
-  omega <- rep(0, d)
-  
-  for(i in (-burnin_omega+1):iter_omega){
-    
-    proposed_omega <- mvrnorm(n = 1, omega, sigma_matrix)
-    
-    numerator <- log_integrated_likelihood_cluster(y, exp(proposed_omega), n_clust, trunc)
-    denominator <- log_integrated_likelihood_cluster(y, exp(omega), n_clust, trunc)
-    
-    for(j in 1:d){
-     
-      numerator <- numerator + dgamma(exp(proposed_omega[j]), shape = alpha_omega, rate = beta_omega, log = T)
-      denominator <- denominator + dgamma(exp(omega[j]), shape = alpha_omega, rate = beta_omega, log = T)
-      
-    }
-    
-    # det of Jacobian
-    numerator <- numerator + sum(proposed_omega)
-    denominator <- denominator + sum(omega)
-    
-    ratio <- numerator - denominator
-    
-    #if(is.nan(ratio)) browser()
-    
-    if(log(runif(1)) <= min(0, ratio)){
-      omega <- proposed_omega
-      #print('accepted')
-    } #else print('refused')
-      
-      
-    
-  }
-  
-  
-  return(exp(omega))
   
 }
 
@@ -56,7 +23,7 @@ MH_omega <- function(burnin_omega, iter_omega,
 
 #### MH OMEGA SPLIT ####
 
-MH_omega_split <- function(burnin_omega, iter_omega, 
+MH_omega_split <- function(iter_omega, 
                            y, j, d, rho_proposed,
                            omega, sigma_0, 
                            alpha_omega, beta_omega, trunc){
@@ -78,7 +45,7 @@ MH_omega_split <- function(burnin_omega, iter_omega,
     y_clust <- y_partition[[j + clust]]
     
     
-    new_value[clust + 1, ] <- MH_omega(burnin_omega, iter_omega, y_clust, 
+    new_value[clust + 1, ] <- MH_omega(iter_omega, y_clust, 
                                        d, sigma_0, 
                                        alpha_omega, beta_omega, 
                                        n_clust, trunc)
@@ -120,7 +87,7 @@ MH_omega_split <- function(burnin_omega, iter_omega,
 
 #### MH OMEGA MERGE ####
 
-MH_omega_merge <- function(burnin_omega, iter_omega, 
+MH_omega_merge <- function(iter_omega, 
                            y, j, rho_proposed,
                            omega, sigma_0, 
                            alpha_omega, beta_omega, trunc){
@@ -138,7 +105,7 @@ MH_omega_merge <- function(burnin_omega, iter_omega,
   y_clust <- y_partition[[j]]
   
   
- new_value <-  MH_omega(burnin_omega, iter_omega, y_clust, 
+ new_value <-  MH_omega(iter_omega, y_clust, 
                         d, sigma_0, 
                         alpha_omega, beta_omega, 
                         n_clust, trunc)
@@ -176,7 +143,7 @@ MH_omega_merge <- function(burnin_omega, iter_omega,
 
 #### MH OMEGA SHUFFLE ####
 
-MH_omega_shuffle <- function(burnin_omega, iter_omega, 
+MH_omega_shuffle <- function(iter_omega, 
                            y, j, d, 
                            rho, rho_proposed,
                            omega, sigma_0, 
@@ -201,7 +168,7 @@ MH_omega_shuffle <- function(burnin_omega, iter_omega,
     n_clust <- rho_proposed[j + clust]
  
     
-    omega[j + clust, ] <- MH_omega(burnin_omega, iter_omega, y_clust, 
+    omega[j + clust, ] <- MH_omega(iter_omega, y_clust, 
                                    d, sigma_0, 
                                    alpha_omega, beta_omega, 
                                    n_clust, trunc)

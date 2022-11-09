@@ -27,12 +27,12 @@ remove(list = c('omega1', 'y1', 'omega2', 'y2', 'omega3', 'y3'))
 
 setwd('C:/Users/edoar/Desktop/Tesi/Code/BNP-change-point-detection-compositional')
 
-n_iter <- 1000
+n_iter <- 10000
 burnin <- 0
 q <- .8
 trunc <- 5
 iter_omega <- 100
-burnin_omega <- 50
+#burnin_omega <- 50
 sigma_proposal_omega <- 0.01
 alpha_omega <- 2 
 beta_omega <- 2
@@ -45,11 +45,15 @@ beta_theta <- 1
 
 source('MCMC.R')
 
+
+
 output <- MCMC(n_iter, burnin, y, q,
                  #method = 'MC_integration',
                  trunc,
-                 iter_omega, burnin_omega, sigma_proposal_omega,
+                 iter_omega, sigma_proposal_omega,
                  alpha_omega, beta_omega, 
                  alpha_sigma, beta_sigma,
                  alpha_propose_sigma, beta_propose_sigma,
                  alpha_theta, beta_theta)
+
+

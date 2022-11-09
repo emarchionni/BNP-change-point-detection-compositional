@@ -11,7 +11,7 @@ library('copula')
 library('pbmcapply')
 library('Rcpp')
 
-sourceCpp('transition_densities_cluster_cpp.cpp')
+sourceCpp('transition_densities_omega_update_cpp.cpp')
 source('MCMC_split_merge_shuffle.R')
 source('MCMC_alpha.R')
 source('MCMC_omega.R')
@@ -27,13 +27,15 @@ source('update_parameters/sample_theta.R')
 MCMC <- function(niter, burnin, y, q,
                  #method = 'MC_integration',
                  trunc,
-                 iter_omega, burnin_omega, sigma_proposal_omega,
+                 iter_omega, sigma_proposal_omega,
                  alpha_omega, beta_omega, 
                  alpha_sigma, beta_sigma,
                  alpha_propose_sigma, beta_propose_sigma,
                  alpha_theta, beta_theta){
   
 
+  begin_time <- Sys.time()
+  
   #### INITIALIZATION ####
   
   
@@ -91,7 +93,7 @@ MCMC <- function(niter, burnin, y, q,
     
     
     
-    if(iter > 400 || iter %% 100 == 0){
+    if(iter %% 100 == 0){
       print(iter)
       print(rho)
     }
@@ -119,7 +121,7 @@ MCMC <- function(niter, burnin, y, q,
       eppf_proposed <- log_EPPF(rho_proposed, theta, sigma)
       
       # update omega for new clusters
-      omega_proposed <- MH_omega_split(burnin_omega, iter_omega, 
+      omega_proposed <- MH_omega_split(iter_omega, 
                                   y, j, d, rho_proposed,
                                   omega, sigma_proposal_omega, 
                                   alpha_omega, beta_omega, trunc)
@@ -134,13 +136,13 @@ MCMC <- function(niter, burnin, y, q,
                                       likelihood, eppf, 
                                       likelihood_proposed, eppf_proposed,
                                       rho, rho_proposed)
-      
+      if(!is.double(log_ratio)|| is.na(exp(log_ratio) == 0)) browser()
       # MH step
       
       tot_partition_split <- tot_partition_split + 1 
       
       
-      if((log(runif(1)) <= min(0, log_ratio)) || (exp(log_ratio) == 0)){
+      if((log(runif(1)) <= min(0, log_ratio))){
         
         rho <- rho_proposed
         omega <- omega_proposed
@@ -173,7 +175,7 @@ MCMC <- function(niter, burnin, y, q,
       
       
       # update omega for new clusters
-      omega_proposed <- MH_omega_merge(burnin_omega, iter_omega, 
+      omega_proposed <- MH_omega_merge(iter_omega, 
                                        y, j, rho_proposed,
                                        omega, sigma_proposal_omega, 
                                        alpha_omega, beta_omega, trunc)
@@ -194,12 +196,12 @@ MCMC <- function(niter, burnin, y, q,
                                       likelihood_proposed, eppf_proposed,
                                       rho, rho_proposed)
       
-      
+      if(!is.double(log_ratio)|| is.na(exp(log_ratio) == 0)) browser()
       # MH step
       
       tot_partition_merge <- tot_partition_merge + 1
       
-      if((log(runif(1)) <= min(0, log_ratio)) || (exp(log_ratio) == 0)){
+      if((log(runif(1)) <= min(0, log_ratio))){
         
         rho <- rho_proposed
         omega <- omega_proposed
@@ -243,7 +245,7 @@ MCMC <- function(niter, burnin, y, q,
         
         
         # update omega for new clusters
-        omega_proposed <- MH_omega_shuffle(burnin_omega, iter_omega, 
+        omega_proposed <- MH_omega_shuffle(iter_omega, 
                                            y, j, d, 
                                            rho, rho_proposed,
                                            omega, sigma_proposal_omega, 
@@ -265,7 +267,7 @@ MCMC <- function(niter, burnin, y, q,
                                           likelihood_proposed, eppf_proposed,
                                           rho, rho_proposed)
         
-        
+        if(!is.double(log_ratio)|| is.na(exp(log_ratio) == 0)) browser()
         # MH step
         
         tot_partition_shuffle <- tot_partition_shuffle + 1
@@ -350,12 +352,13 @@ MCMC <- function(niter, burnin, y, q,
   }
   
   
-  ### TODO: return output
+  end_time <- Sys.time()
   
   return(list(partitions = Acc_partition_iter,
               theta = Theta,
               sigma = acc_sigma,
               prop_acc_partition_split = (acc_partition_split / tot_partition_split),
               prop_acc_partition_merge = (acc_partition_merge / tot_partition_merge),
-              prop_acc_partition_shuffle = (acc_partition_shuffle / tot_partition_shuffle)))
+              prop_acc_partition_shuffle = (acc_partition_shuffle / tot_partition_shuffle),
+              execution_time = (end_time - begin_time)))
 }

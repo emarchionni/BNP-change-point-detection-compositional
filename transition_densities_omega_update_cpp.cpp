@@ -310,3 +310,119 @@ double log_integrated_likelihood_cluster_multiple_cpp(Rcpp::NumericMatrix y, Rcp
 	return value;
 	
 }
+
+
+// MH CLUSTER OMEGA
+
+// [[Rcpp::export]]
+Rcpp::NumericVector MH_omega_cluster_multi(int iter_omega, Rcpp::NumericMatrix y, int d, double sigma_0, double alpha_omega, double beta_omega, int trunc){
+	
+	//Rcpp::NumericMatrix sigma = Rcpp::NumericMatrix::diag(d, sigma_0);
+	
+	Rcpp::NumericVector omega(d);
+	Rcpp::NumericVector proposed_omega(d);
+	Rcpp::NumericVector exp_omega(Rcpp::exp(omega));
+	Rcpp::NumericVector exp_proposed_omega(Rcpp::exp(proposed_omega));
+	
+	
+	double numerator = .0;
+	double denominator = .0;
+	double ratio = .0;
+
+
+	
+	for(int iter = 0; iter < iter_omega; ++iter){
+		
+		
+		
+		for(int i = 0; i < d; ++i)
+			proposed_omega[i] = R::rnorm(omega[i], sigma_0);
+		
+		exp_proposed_omega = Rcpp::exp(proposed_omega);
+		
+		numerator = log_integrated_likelihood_cluster_multiple_cpp(y, exp_proposed_omega, trunc);
+		denominator = log_integrated_likelihood_cluster_multiple_cpp(y, exp_omega, trunc);
+		
+		for(int j = 0; j < d; ++j){
+			
+			// Rcpp::dgamma is shape-scale, our convention is shape-rate
+			numerator += R::dgamma(exp_proposed_omega[j], alpha_omega, 1 / beta_omega, 1);
+			denominator += R::dgamma(exp_omega[j], alpha_omega, 1 / beta_omega, 1);
+			
+		}
+		
+		numerator += Rcpp::sum(proposed_omega);
+		denominator += Rcpp::sum(omega);
+		
+		ratio = numerator - denominator;
+		
+		if(std::log(R::runif(0.0,1.0)) <= std::min(0.0, ratio)){
+			
+			omega = proposed_omega;
+			exp_omega = exp_proposed_omega;		
+			
+		}
+		
+	}
+	
+	return(exp_omega);
+	
+}
+
+
+// [[Rcpp::export]]
+Rcpp::NumericVector MH_omega_cluster_single(int iter_omega, Rcpp::NumericVector y, int d, double sigma_0, double alpha_omega, double beta_omega, int trunc){
+	
+	//Rcpp::NumericMatrix sigma = Rcpp::NumericMatrix::diag(d, sigma_0);
+	
+	Rcpp::NumericVector omega(d);
+	Rcpp::NumericVector proposed_omega(d);
+	Rcpp::NumericVector exp_omega(Rcpp::exp(omega));
+	Rcpp::NumericVector exp_proposed_omega(Rcpp::exp(proposed_omega));
+	
+	
+	double numerator = .0;
+	double denominator = .0;
+	double ratio = .0;
+
+
+	
+	for(int iter = 0; iter < iter_omega; ++iter){
+		
+		
+		for(int i = 0; i < d; ++i)
+			proposed_omega[i] = R::rnorm(omega[i], sigma_0);
+		
+		exp_proposed_omega = Rcpp::exp(proposed_omega);
+		
+		numerator = std::log(ddirichlet_cpp(y, exp_proposed_omega));
+		denominator = std::log(ddirichlet_cpp(y, exp_omega));
+		
+		for(int j = 0; j < d; ++j){
+			
+			// Rcpp::dgamma is shape-scale, our convention is shape-rate
+			numerator += R::dgamma(exp_proposed_omega[j], alpha_omega, 1 / beta_omega, 1);
+			denominator += R::dgamma(exp_omega[j], alpha_omega, 1 / beta_omega, 1);
+			
+		}
+		
+		numerator += Rcpp::sum(proposed_omega);
+		denominator += Rcpp::sum(omega);
+		
+		ratio = numerator - denominator;
+		
+		if(std::log(R::runif(0.0,1.0)) <= std::min(0.0, ratio)){
+			
+			omega = proposed_omega;
+			exp_omega = exp_proposed_omega;		
+			
+		}
+		
+	}
+	
+	return(exp_omega);
+	
+}
+
+
+
