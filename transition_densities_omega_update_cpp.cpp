@@ -85,15 +85,15 @@ double sum_cpp(Rcpp::NumericVector y){
 
 
 // [[Rcpp::export]]	
-double ddirichlet_cpp(Rcpp::NumericVector y, Rcpp::NumericVector omega){
+double log_ddirichlet_cpp(Rcpp::NumericVector y, Rcpp::NumericVector omega){
 	
-	double value = 1.;
+	double value = 0.;
 	
 	for(int i = 0; i < y.length(); ++i){
-		value *= (std::pow(y[i], omega[i] - 1) / std::tgamma(omega[i]));
+		value += ( (omega[i] - 1) * std::log(y[i]) - std::lgamma(omega[i]));
 	}
 	
-	value *= std::tgamma(Rcpp::sum(omega));
+	value += std::lgamma(Rcpp::sum(omega));
 	
 	return value;
 	
@@ -210,7 +210,7 @@ double zeta_m_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::NumericV
 	  
 	  Rcpp::NumericVector sum_omega = omega + curr_composition;
 		
-		value += ( factorial_cpp(m) * pow(Rcpp::sum(y_0), curr_composition[d - 1]) * ddirichlet_cpp(y, sum_omega) / prod_factorial_vector_cpp(curr_composition));
+		value += ( factorial_cpp(m) * pow(Rcpp::sum(y_0), curr_composition[d - 1]) * std::exp(log_ddirichlet_cpp(y, sum_omega)) / prod_factorial_vector_cpp(curr_composition));
 		
 	}
 	
@@ -249,7 +249,7 @@ double Q_n_poly_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::Numeri
 // [[Rcpp::export]]
 double log_transition_densities(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::NumericVector omega, int trunc){
   
-  double value = ddirichlet_cpp(y, omega);
+  double value = std::exp(log_ddirichlet_cpp(y, omega));
   double Qn = 0;
   double lambda_n = 0;
   double omega_norm = Rcpp::sum(omega);
@@ -289,7 +289,7 @@ double log_integrated_likelihood_cluster_multiple_cpp(Rcpp::NumericMatrix y, Rcp
 		y_curr[j] = y(0, j);
 		
 	
-	double value = std::log(ddirichlet_cpp(y_curr, omega));
+	double value = log_ddirichlet_cpp(y_curr, omega);
 	
 	
 	Rcpp::NumericVector y_previous(d);
@@ -395,8 +395,8 @@ Rcpp::NumericVector MH_omega_cluster_single(int iter_omega, Rcpp::NumericVector 
 		
 		exp_proposed_omega = Rcpp::exp(proposed_omega);
 		
-		numerator = std::log(ddirichlet_cpp(y, exp_proposed_omega));
-		denominator = std::log(ddirichlet_cpp(y, exp_omega));
+		numerator = log_ddirichlet_cpp(y, exp_proposed_omega);
+		denominator = log_ddirichlet_cpp(y, exp_omega);
 		
 		for(int j = 0; j < d; ++j){
 			
