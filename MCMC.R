@@ -2,7 +2,9 @@
 #'@param y: data, time X features
 #'@param trunc: truncation value transition densities
 #'@param step_omega: number of MH steps or number of samples in MC integration
-#'
+#'@param MC_integration: if true, MCMC split&merge is performed using the integrated marginal likelihood, 
+#'otherwise we perform an MH step for the value to estimate parameters of the the integrated likelihood,
+#'note that in this latter case sigma_proposal_omega has no effect
 
 
 library('extraDistr')
@@ -14,8 +16,9 @@ library('Rcpp')
 sourceCpp('transition_densities_omega_update_cpp.cpp')
 source('MCMC_split_merge_shuffle.R')
 source('MCMC_alpha.R')
-source('MCMC_omega.R')
+source('MH_omega.R')
 source('likelihood.R')
+source('MC_likelihood.R')
 source('eppf.R')
 source('support_functions.R')
 source('update_parameters/MCMC_sigma.R')
@@ -25,13 +28,13 @@ source('update_parameters/sample_theta.R')
 
 
 MCMC <- function(niter, burnin, y, q,
-                 #method = 'MC_integration',
                  trunc,
                  iter_omega, sigma_proposal_omega,
                  alpha_omega, beta_omega, 
                  alpha_sigma, beta_sigma,
                  alpha_propose_sigma, beta_propose_sigma,
-                 alpha_theta, beta_theta){
+                 alpha_theta, beta_theta,
+                 MC_integration = F){
   
 
   begin_time <- Sys.time()
@@ -67,12 +70,26 @@ MCMC <- function(niter, burnin, y, q,
   k <- length(rho)
   
   
-  # initial omega
-  omega <- array(rgamma(d * k, alpha_omega, beta_omega), c(k, d)) # cluster x component
+  if(!MC_integration){
+    # if MH step
+    
+    # initial omega
+    omega <- array(rgamma(d * k, alpha_omega, beta_omega), c(k, d)) # cluster x component
+    
+    # initial cluster likelihood
+    likelihood <- full_log_integrated_likelihood(y, rho, omega, k, trunc)
+    
+  } else {
+    # if MC integration
+    
+    # initial cluster likelihood
+    likelihood <- MC_full_log_integrated_MARGINAL_likelihood(y, rho, trunc, n_clust, 
+                                                             iter_omega,
+                                                             alpha_omega, beta_omega)
+    
+  }
   
   
-  # initial cluster likelihood
-  likelihood <- full_log_integrated_likelihood(y, rho, omega, k, trunc)
   
   # initial sigma
   sigma <- rbeta(1, alpha_sigma, beta_sigma)
@@ -120,43 +137,58 @@ MCMC <- function(niter, burnin, y, q,
       # compute eppf proposed
       eppf_proposed <- log_EPPF(rho_proposed, theta, sigma)
       
-      # update omega for new clusters
-      omega_proposed <- MH_omega_split(iter_omega, 
-                                  y, j, d, rho_proposed,
-                                  omega, sigma_proposal_omega, 
-                                  alpha_omega, beta_omega, trunc)
       
-      # compute likelihood proposed
-      likelihood_proposed <- full_log_integrated_likelihood_after_split(likelihood, y, 
-                                                                        rho_proposed, j, trunc, 
-                                                                        omega_proposed)
+      if(!MC_integration){
+        # if MH step
+        
+        # update omega for new clusters
+        omega_proposed <- MH_omega_split(iter_omega, 
+                                         y, j, d, rho_proposed,
+                                         omega, sigma_proposal_omega, 
+                                         alpha_omega, beta_omega, trunc)
+        
+        # compute likelihood proposed
+        likelihood_proposed <- full_log_integrated_likelihood_after_split(likelihood, y, 
+                                                                          rho_proposed, j, trunc, 
+                                                                          omega_proposed)
+        
+        
+      } else {
+        # if MH integration
+        
+        # MC integration likelihood
+        likelihood_proposed <- MC_full_log_integrated_MARGINAL_likelihood_after_split(likelihood, y,
+                                                                                      rho_proposed, j,
+                                                                                      trunc,
+                                                                                      iter_omega,
+                                                                                      alpha_omega, beta_omega)
+        
+      }
+      
       
       # compute log MH-alpha
       log_ratio <- MC_log_alpha_split(q, j,
                                       likelihood, eppf, 
                                       likelihood_proposed, eppf_proposed,
                                       rho, rho_proposed)
-      if(!is.double(log_ratio)|| is.na(exp(log_ratio) == 0)) browser()
-      # MH step
+      if(!is.double(log_ratio)|| is.na(exp(log_ratio) == 0)) browser() # TODO
+     
       
+      # MH step
       tot_partition_split <- tot_partition_split + 1 
       
       
       if((log(runif(1)) <= min(0, log_ratio))){
         
         rho <- rho_proposed
-        omega <- omega_proposed
+        if(!MC_integration) omega <- omega_proposed
         likelihood <- likelihood_proposed
         eppf <- eppf_proposed
         acc_partition_split <- acc_partition_split + 1
         
+        
       }
       
-      if(iter > 0){
-        
-        ### TODO: save partition
-        
-      }
       
       
       
@@ -174,48 +206,59 @@ MCMC <- function(niter, burnin, y, q,
       eppf_proposed <- log_EPPF(rho_proposed, theta, sigma)
       
       
-      # update omega for new clusters
-      omega_proposed <- MH_omega_merge(iter_omega, 
-                                       y, j, rho_proposed,
-                                       omega, sigma_proposal_omega, 
-                                       alpha_omega, beta_omega, trunc)
+      if(!MC_integration){
+        # if MH step
+        
+        # update omega for new clusters
+        omega_proposed <- MH_omega_merge(iter_omega, 
+                                         y, j, rho_proposed,
+                                         omega, sigma_proposal_omega, 
+                                         alpha_omega, beta_omega, trunc)
+        
+        
+        # compute likelihood proposed
+        likelihood_proposed <- full_log_integrated_likelihood_after_merge(likelihood, y, 
+                                                                          rho_proposed, j, 
+                                                                          trunc, omega_proposed)
+        
+        
+      } else {
+        # if MC integration
+        
+        # MC integration likelihood
+        likelihood_proposed <- MC_full_log_integrated_MARGINAL_likelihood_after_merge(likelihood, y, 
+                                                                                      rho_proposed, j, 
+                                                                                      trunc,
+                                                                                      iter_omega,
+                                                                                      alpha_omega, beta_omega)
+        
+      }
       
       
-      # compute likelihood proposed
-      likelihood_proposed <- full_log_integrated_likelihood_after_merge(likelihood, y, 
-                                                                        rho_proposed, j, 
-                                                                        trunc, omega_proposed)
       
       
       
       # compute log MH-alpha
-      
-      
       log_ratio <- MC_log_alpha_merge(q, j,
                                       likelihood, eppf,
                                       likelihood_proposed, eppf_proposed,
                                       rho, rho_proposed)
+      if(!is.double(log_ratio)|| is.na(exp(log_ratio) == 0)) browser() #TODO
       
-      if(!is.double(log_ratio)|| is.na(exp(log_ratio) == 0)) browser()
+      
       # MH step
-      
       tot_partition_merge <- tot_partition_merge + 1
       
       if((log(runif(1)) <= min(0, log_ratio))){
         
         rho <- rho_proposed
-        omega <- omega_proposed
+        if(!MC_integration) omega <- omega_proposed        
         likelihood <- likelihood_proposed
         eppf <- eppf_proposed
         acc_partition_merge <- acc_partition_merge + 1
         
       }
       
-      if(iter > 0){
-        
-        ### TODO: save 
-        
-      }
       
       
     }
@@ -244,18 +287,35 @@ MCMC <- function(niter, burnin, y, q,
         eppf_proposed <- log_EPPF(rho_proposed, theta, sigma)
         
         
-        # update omega for new clusters
-        omega_proposed <- MH_omega_shuffle(iter_omega, 
-                                           y, j, d, 
-                                           rho, rho_proposed,
-                                           omega, sigma_proposal_omega, 
-                                           alpha_omega, beta_omega, trunc)
+        if(!MC_integration){
+          # if MH step
+          
+          # update omega for new clusters
+          omega_proposed <- MH_omega_shuffle(iter_omega, 
+                                             y, j, d, 
+                                             rho, rho_proposed,
+                                             omega, sigma_proposal_omega, 
+                                             alpha_omega, beta_omega, trunc)
+          
+          
+          # compute likelihood proposed
+          likelihood_proposed <- full_log_integrated_likelihood_after_shuffle(likelihood, y, 
+                                                                              rho, rho_proposed, j, 
+                                                                              trunc, omega_proposed)
+          
+          
+        } else {
+          # if MC integration
+          
+          # MC integration likelihood
+          likelihood_proposed <- MC_full_log_integrated_MARGINAL_likelihood_after_shuffle(likelihood, y,
+                                                                                          rho, rho_proposed, j, 
+                                                                                          trunc, 
+                                                                                          iter_omega,
+                                                                                          alpha_omega, beta_omega)
+          
+        }
         
-        
-        # compute likelihood proposed
-        likelihood_proposed <- full_log_integrated_likelihood_after_shuffle(likelihood, y, 
-                                                                            rho, rho_proposed, j, 
-                                                                            trunc, omega_proposed)
         
         
         
@@ -267,7 +327,7 @@ MCMC <- function(niter, burnin, y, q,
                                           likelihood_proposed, eppf_proposed,
                                           rho, rho_proposed)
         
-        if(!is.double(log_ratio)|| is.na(exp(log_ratio) == 0)) browser()
+        if(!is.double(log_ratio)|| is.na(exp(log_ratio) == 0)) browser() #TODO
         # MH step
         
         tot_partition_shuffle <- tot_partition_shuffle + 1
@@ -275,19 +335,13 @@ MCMC <- function(niter, burnin, y, q,
         if(log(runif(1)) <= min(0, log_ratio)){
           
           rho <- rho_proposed
-          omega <- omega_proposed
+          if(!MC_integration) omega <- omega_proposed
           likelihood <- likelihood_proposed
           eppf <- eppf_proposed
-          acc_partition_merge <- acc_partition_merge + 1
+          acc_partition_shuffle <- acc_partition_shuffle + 1
           
         }
         
-        
-        if(iter > 0){
-          
-          #TODO: save
-          
-        }
         
         
         
@@ -356,7 +410,7 @@ MCMC <- function(niter, burnin, y, q,
   
   return(list(partitions = Acc_partition_iter,
               theta = Theta,
-              sigma = acc_sigma,
+              sigma = Acc_sigma,
               prop_acc_partition_split = (acc_partition_split / tot_partition_split),
               prop_acc_partition_merge = (acc_partition_merge / tot_partition_merge),
               prop_acc_partition_shuffle = (acc_partition_shuffle / tot_partition_shuffle),
