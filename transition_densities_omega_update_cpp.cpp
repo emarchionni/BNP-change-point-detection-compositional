@@ -437,7 +437,7 @@ double MC_log_integrated_MARGINAL_likelihood_cluster_single_cpp(Rcpp::NumericVec
 	
 	for(int iter = 0; iter < iter_omega; ++iter){
 		
-		omega_sampled = Rcpp::rgamma(d, alpha_omega, 1/beta_omega );
+		omega_sampled = Rcpp::rgamma(d, alpha_omega, 1/beta_omega);
 		value += std::exp(log_ddirichlet_cpp(y, omega_sampled));
 		
 		

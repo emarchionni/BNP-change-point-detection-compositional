@@ -8,7 +8,9 @@ sample_theta <- function(n, k,
   z <- rbeta(n = 1, theta + 2, n)
   y <- rexp(n = 1, theta + 1)
   
-  for(j in 0:(k + 1)){
+  for(j in 1:(k + 1)){ 
+    
+    # note that the first weight according to Martinez and Mena is 0
     
     value <- log(alpha_theta + j) - j * (log(sigma) + log(beta_theta + y - log(z)))
     

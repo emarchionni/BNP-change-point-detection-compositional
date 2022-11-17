@@ -57,3 +57,109 @@ output <- MCMC(n_iter, burnin, y, q,
                TRUE)
 
 
+
+
+#### RUN ####
+
+remove(list = ls())
+
+
+library('extraDistr')
+library('MASS')
+library('copula')
+library('Compositional')
+
+# data simulation for O-U process
+
+gamma_sim_1 = 0.5
+gamma_sim_2 = 0.5
+gamma_sim_3 = 0.5
+
+mu_1 <- c(-0.2,-0.4)
+mu_2 <- c(1,1)
+mu_3 <- c(-2,2)
+
+
+sigma_1 = sigma_2 = sigma_3 = matrix(0, nrow = 2, ncol = 2)
+
+
+diag(sigma_1) = c(0.5,0.2)
+
+sigma_1[1,2]  = 0.2
+sigma_1[2,1]  = 0.2
+
+
+
+diag(sigma_2) <- c(1.5,2)
+
+diag(sigma_3) <- c(2.5,2.5)
+sigma_3[2,3]  = 0.4
+sigma_3[3,2]  = 0.4
+
+data_scenario_1 <- as.data.frame(matrix(nrow = 300, ncol = 2))
+
+data_scenario_1[1,] = mu_1
+
+for(i in 2:100){ 
+  
+  data_scenario_1[i,] = gamma_sim_1*data_scenario_1[i-1,] + (1-gamma_sim_1)*mu_1 + mvrnorm(n = 1,mu = mu_1, Sigma =  sigma_1)
+  
+}
+
+
+data_scenario_1[101,] = mu_2
+
+for(i in 102:200){ 
+  
+  data_scenario_1[i,] = gamma_sim_2*data_scenario_1[i-1,] + (1-gamma_sim_2)*mu_2 + mvrnorm(n = 1,  mu = mu_2, Sigma =  sigma_2)
+  
+}
+
+data_scenario_1[201,] = mu_3
+
+for(i in 202:300){ 
+  
+  data_scenario_1[i,] = gamma_sim_3*data_scenario_1[i-1,] + (1-gamma_sim_3)*mu_3 + mvrnorm(n = 1, mu = mu_3, Sigma =  sigma_3)
+  
+}
+
+data <- as.matrix(data_scenario_1)
+
+y <- as.matrix(alrinv(data))
+
+dev.off()
+plot(y[1:300,1],y[1:300,2])
+plot(y[1:300,2],y[1:300,3])
+plot(y[1:300,1],y[1:300,3])
+
+
+
+setwd('C:/Users/edoar/Desktop/Tesi/Code/BNP-change-point-detection-compositional')
+
+n_iter <- 1500
+burnin <- 0
+q <- .8
+trunc <- 3
+iter_omega <- 150
+#burnin_omega <- 50
+sigma_proposal_omega <- 3
+alpha_omega <- 2 
+beta_omega <- 2
+alpha_sigma <- 1
+beta_sigma <- 1
+alpha_propose_sigma <- 1 
+beta_propose_sigma <- 1
+alpha_theta <- 1
+beta_theta <- 1
+
+
+source('MCMC.R')
+
+output <- MCMC(n_iter, burnin, y, q,
+               trunc,
+               iter_omega, sigma_proposal_omega,
+               alpha_omega, beta_omega, 
+               alpha_sigma, beta_sigma,
+               alpha_propose_sigma, beta_propose_sigma,
+               alpha_theta, beta_theta, 
+               F)

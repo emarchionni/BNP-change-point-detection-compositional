@@ -41,7 +41,7 @@ MCMC <- function(niter, burnin, y, q,
   
   #### INITIALIZATION ####
   
-  
+  function_parameters <- as.list(environment(), all=TRUE)
   
   # saving containers
   Acc_sigma <- array(0, n_iter)
@@ -66,6 +66,7 @@ MCMC <- function(niter, burnin, y, q,
   #rho <- c(rho, n-rho)
   rho <- rep(1,n)
   
+  
   # number of clusters
   k <- length(rho)
   
@@ -75,6 +76,7 @@ MCMC <- function(niter, burnin, y, q,
     
     # initial omega
     omega <- array(rgamma(d * k, alpha_omega, beta_omega), c(k, d)) # cluster x component
+    #omega <- array(1, c(k, d))
     
     # initial cluster likelihood
     likelihood <- full_log_integrated_likelihood(y, rho, omega, k, trunc)
@@ -110,7 +112,7 @@ MCMC <- function(niter, burnin, y, q,
     
     
     
-    if(iter %% 100 == 0){
+    if(iter %% 50 == 0){
       print(iter)
       print(rho)
     }
@@ -408,7 +410,8 @@ MCMC <- function(niter, burnin, y, q,
   
   end_time <- Sys.time()
   
-  return(list(partitions = Acc_partition_iter,
+  return(list(call = function_parameters,
+              partitions = Acc_partition_iter,
               theta = Theta,
               sigma = Acc_sigma,
               prop_acc_partition_split = (acc_partition_split / tot_partition_split),
