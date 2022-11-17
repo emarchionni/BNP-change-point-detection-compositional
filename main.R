@@ -93,31 +93,31 @@ sigma_1[2,1]  = 0.2
 diag(sigma_2) <- c(1.5,2)
 
 diag(sigma_3) <- c(2.5,2.5)
-sigma_3[2,3]  = 0.4
-sigma_3[3,2]  = 0.4
+sigma_3[2,1]  = 0.4
+sigma_3[1,2]  = 0.4
 
-data_scenario_1 <- as.data.frame(matrix(nrow = 300, ncol = 2))
+data_scenario_1 <- as.data.frame(matrix(nrow = 150, ncol = 2))
 
 data_scenario_1[1,] = mu_1
 
-for(i in 2:100){ 
+for(i in 2:50){ 
   
   data_scenario_1[i,] = gamma_sim_1*data_scenario_1[i-1,] + (1-gamma_sim_1)*mu_1 + mvrnorm(n = 1,mu = mu_1, Sigma =  sigma_1)
   
 }
 
 
-data_scenario_1[101,] = mu_2
+data_scenario_1[51,] = mu_2
 
-for(i in 102:200){ 
+for(i in 52:100){ 
   
   data_scenario_1[i,] = gamma_sim_2*data_scenario_1[i-1,] + (1-gamma_sim_2)*mu_2 + mvrnorm(n = 1,  mu = mu_2, Sigma =  sigma_2)
   
 }
 
-data_scenario_1[201,] = mu_3
+data_scenario_1[100,] = mu_3
 
-for(i in 202:300){ 
+for(i in 101:150){ 
   
   data_scenario_1[i,] = gamma_sim_3*data_scenario_1[i-1,] + (1-gamma_sim_3)*mu_3 + mvrnorm(n = 1, mu = mu_3, Sigma =  sigma_3)
   
@@ -128,23 +128,23 @@ data <- as.matrix(data_scenario_1)
 y <- as.matrix(alrinv(data))
 
 dev.off()
-plot(y[1:300,1],y[1:300,2])
-plot(y[1:300,2],y[1:300,3])
-plot(y[1:300,1],y[1:300,3])
+plot(y[1:150,1],y[1:150,2])
+plot(y[1:150,2],y[1:150,3])
+plot(y[1:150,1],y[1:150,3])
 
 
 
 setwd('C:/Users/edoar/Desktop/Tesi/Code/BNP-change-point-detection-compositional')
 
-n_iter <- 1500
+n_iter <- 30000
 burnin <- 0
 q <- .8
 trunc <- 3
 iter_omega <- 150
 #burnin_omega <- 50
 sigma_proposal_omega <- 3
-alpha_omega <- 2 
-beta_omega <- 2
+alpha_omega <- .1
+beta_omega <- .1
 alpha_sigma <- 1
 beta_sigma <- 1
 alpha_propose_sigma <- 1 
@@ -163,3 +163,5 @@ output <- MCMC(n_iter, burnin, y, q,
                alpha_propose_sigma, beta_propose_sigma,
                alpha_theta, beta_theta, 
                F)
+
+save(output, file = "simulation_17_11_30Kiter_2.RData")
