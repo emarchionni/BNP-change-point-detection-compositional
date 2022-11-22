@@ -36,28 +36,59 @@ double factorial_cpp(double n){
 
 
 // [[Rcpp::export]]
-double prod_factorial_vector_cpp(Rcpp::NumericVector y){
+double log_factorial_cpp(double n){
   
-  double value = 1.;
   
-  for(int i = 0; i < y.length(); ++i)
-    value *= factorial_cpp(y[i]);
+  double fact_n = 0.;
   
-  return value;
+  if(n == 0)
+    return fact_n;
   
+  for(int i = 1; i <= n; ++i)
+    fact_n += std::log(i);
+  
+  return fact_n;
 }
 
+//// [[Rcpp::export]]
+//double prod_factorial_vector_cpp(Rcpp::NumericVector y){
+//  
+//  double value = 1.;
+//  
+//  for(int i = 0; i < y.length(); ++i)
+//    value *= factorial_cpp(y[i]);
+//  
+//  return value;
+//  
+//}
 
-// [[Rcpp::export]]
-double sum_cpp(Rcpp::NumericVector y){
-	
-	double value = 0;
-	
-	for(int i = 0; i < y.length(); ++i)
-		value += y[i];
-	
-	return value;
-}
+//// [[Rcpp::export]]
+//double log_prod_factorial_vector_cpp(Rcpp::NumericVector y){
+//  
+//  double value = 0.;
+//  
+//  for(int i = 0; i < y.length(); ++i)
+//    value += log_factorial_cpp(y[i]);
+//  
+//  return value;
+//  
+//}
+
+
+
+//// [[Rcpp::export]]
+//double sum_cpp(Rcpp::NumericVector y){
+//	
+//	double value = 0;
+//	
+//	for(int i = 0; i < y.length(); ++i)
+//		value += y[i];
+//	
+//	return value;
+//}
+
+
+
 
 
 //// [[Rcpp::export]]	
@@ -203,15 +234,27 @@ double zeta_m_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::NumericV
 	
 	for(int i = 0; i < num_compositions; ++i){
 		
-		Rcpp::NumericVector curr_composition(d);
+	  Rcpp::NumericVector curr_composition(d);
 	  
 	  for(int j = 0; j < d; ++j)
 	    curr_composition[j] = compositions(i, j);
 	  
 	  Rcpp::NumericVector sum_omega = omega + curr_composition;
+	  
+	  
+	  double log_curr_incr = 0.0;
+	  
+	  
+	  for(int i = 0; i < d; ++i){
+		  log_curr_incr += curr_composition[i] * std::log(y_0[i]);
+		  log_curr_incr -= log_factorial_cpp(curr_composition[i]);
+	  }
+		  
+	
 		
-		value += ( factorial_cpp(m) * pow(Rcpp::sum(y_0), curr_composition[d - 1]) * std::exp(log_ddirichlet_cpp(y, sum_omega)) / prod_factorial_vector_cpp(curr_composition));
-		
+	  //value += ( factorial_cpp(m) * pow(Rcpp::sum(y_0), curr_composition[d - 1]) * std::exp(log_ddirichlet_cpp(y, sum_omega)) / prod_factorial_vector_cpp(curr_composition));
+	  value += std::exp( log_factorial_cpp(m) + log_curr_incr + log_ddirichlet_cpp(y, sum_omega));
+	  
 	}
 	
 	return value;
