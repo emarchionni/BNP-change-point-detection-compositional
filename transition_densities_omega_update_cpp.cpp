@@ -222,7 +222,7 @@ Rcpp::NumericMatrix get_all_weak_composition_cpp(int m, int d){
 double zeta_m_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::NumericVector omega, int m){
 	
 	if(m == 0)
-		return 1.;
+		return std::exp(log_ddirichlet_cpp(y, omega));
 	
 	int d = y.length();
 	
@@ -274,7 +274,7 @@ double Q_n_poly_cpp(Rcpp::NumericVector y_0, Rcpp::NumericVector y, Rcpp::Numeri
 	double p = .0;
 	double z_m = .0;
 	
-	for(int m = 0; m <= n; ++m){
+	for(int m = 1; m <= n; ++m){
 		p = pochhammer_cpp(omega_norm + m, n - 1);
 		z_m = zeta_m_cpp(y_0, y , omega, m);
 
@@ -297,8 +297,8 @@ double log_transition_densities(Rcpp::NumericVector y_0, Rcpp::NumericVector y, 
   double lambda_n = 0;
   double omega_norm = Rcpp::sum(omega);
   
-  for(int n = 0; n <= trunc; ++n){
-	  
+  for(int n = 1; n <= trunc; ++n){
+	 // first term is just for numerical reasons, it does not affect MCMC
     Qn = Q_n_poly_cpp(y_0, y, omega, n);
     lambda_n = (.5) * n * (n - 1 + omega_norm);
     value += (std::exp(-lambda_n) * Qn);
