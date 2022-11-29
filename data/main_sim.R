@@ -1,14 +1,14 @@
 library('extraDistr')
-n_data <- 100
+source('C:/Users/edoar/Desktop/Tesi/Code/BNP-change-point-detection-compositional/data/death_process.R')
 
+n_data <- 100
+trunc <- 50
+t <- 1
 omega <- c(0.7, 0.5, 1)
 
 omega_norm <- sum(omega)
 
 d <- length(omega)
-
-trunc <- 100
-t <- 1
 
 
 y <- array(0, c(n_data, d))

@@ -5,6 +5,7 @@
 #'@param MC_integration: if true, MCMC split&merge is performed using the integrated marginal likelihood, 
 #'otherwise we perform an MH step for the value to estimate parameters of the the integrated likelihood,
 #'note that in this latter case sigma_proposal_omega has no effect
+#'@param save_data: if true, the output list will contain the data
 
 
 library('extraDistr')
@@ -34,7 +35,8 @@ MCMC <- function(niter, burnin, y, q,
                  alpha_sigma, beta_sigma,
                  alpha_propose_sigma, beta_propose_sigma,
                  alpha_theta, beta_theta,
-                 MC_integration = F){
+                 MC_integration = F,
+                 save_data = F){
   
 
   begin_time <- Sys.time()
@@ -42,6 +44,9 @@ MCMC <- function(niter, burnin, y, q,
   #### INITIALIZATION ####
   
   function_parameters <- as.list(environment(), all=TRUE)
+  
+  if(!save_data)
+    function_parameters['y'] <- NULL
   
   # saving containers
   Acc_sigma <- array(0, n_iter)
