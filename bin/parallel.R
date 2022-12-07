@@ -12,3 +12,7 @@ x <- foreach(
 }
 
 parallel::stopCluster(cl = my.cluster)
+
+
+registerDoSEQ() # back to sequential
+

@@ -26,9 +26,9 @@ n_rep <- 5
 n_change_points <- 3
 n_data <- 50 # number of observation for each regime
 
-omega_all <- rbind(c(0.7, 0.5, 1),
-                   c(0.8, 0.5, 0.4),
-                   c(1, 1, 1))
+omega_all <- rbind(c(1.3, 0.5, 1),
+                   c(0.4, 0.8, 1),
+                   c(1.2, 1.5, 0.9))
 colnames(omega_all) <- c('1', '2', '3')
 write.table(omega_all, file = 'simulations/MC_calibration/omega.txt')
 omega_all/apply(omega_all, 1, sum)
@@ -38,7 +38,7 @@ d <- dim(omega_all)[2]
 
 
 # non-varying hyperparams of the algorithm
-n_iter <- 4000
+n_iter <- 3000
 burnin <- 1000
 q <- .5
 sigma_proposal_omega <- NA

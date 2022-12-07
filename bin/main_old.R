@@ -4,8 +4,8 @@ remove(list = ls())
 
 
 library('extraDistr')
-library('MASS')
-library('copula')
+#library('MASS')
+#library('copula')
 
 omega1 <- c(2, 5, 10)
 omega1_mean <- omega1/sum(omega1)
@@ -29,7 +29,7 @@ setwd('C:/Users/edoar/Desktop/Tesi/Code/BNP-change-point-detection-compositional
 
 n_iter <- 1500
 burnin <- 0
-q <- .8
+q <- .5
 trunc <- 3
 iter_omega <- 1000
 #burnin_omega <- 50
@@ -67,7 +67,7 @@ remove(list = ls())
 library('extraDistr')
 library('MASS')
 library('copula')
-library('Compositional')
+#library('Compositional')
 
 # data simulation for O-U process
 
