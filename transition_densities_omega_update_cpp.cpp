@@ -371,6 +371,7 @@ Rcpp::NumericVector MH_omega_cluster_multi(int iter_omega, Rcpp::NumericMatrix y
 	double numerator = .0;
 	double denominator = .0;
 	double ratio = .0;
+	//double acc_omega = .0;
 
 
 	
@@ -402,12 +403,14 @@ Rcpp::NumericVector MH_omega_cluster_multi(int iter_omega, Rcpp::NumericMatrix y
 		if(std::log(R::runif(0.0,1.0)) <= std::min(0.0, ratio)){
 			
 			omega = proposed_omega;
-			exp_omega = exp_proposed_omega;		
+			exp_omega = exp_proposed_omega;	
+			//++acc_omega;
 			
 		}
 		
 	}
 	
+	//Rcpp::Rcout << "The value of acc_omega is : " << acc_omega / iter_omega << "\n";
 	return(exp_omega);
 	
 }
@@ -427,6 +430,7 @@ Rcpp::NumericVector MH_omega_cluster_single(int iter_omega, Rcpp::NumericVector 
 	double numerator = .0;
 	double denominator = .0;
 	double ratio = .0;
+	//double acc_omega = .0;
 
 
 	
@@ -458,11 +462,12 @@ Rcpp::NumericVector MH_omega_cluster_single(int iter_omega, Rcpp::NumericVector 
 			
 			omega = proposed_omega;
 			exp_omega = exp_proposed_omega;		
-			
+			//++acc_omega;
 		}
 		
 	}
 	
+	//Rcpp::Rcout << "The value of acc_omega is : " << acc_omega / iter_omega << "\n";	
 	return(exp_omega);
 	
 }
